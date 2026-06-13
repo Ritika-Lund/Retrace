@@ -1,0 +1,19 @@
+ # Python
+__pycache__/
+*.py[cod]
+*.env
+venv/
+.env
+
+# Node
+node_modules/
+.next/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# General
+.DS_Store
+*.log
+.vercel
