@@ -94,3 +94,54 @@ Start with an opening question about their most significant architectural decisi
         result = response.json()
         print("GROQ RESPONSE:", result)
         return result["choices"][0]["message"]["content"]
+async def evaluate_answer(
+    question: str,
+    answer: str,
+    repo_data: dict
+) -> dict:
+    
+    system_prompt = """You are a technical interview evaluator.
+Given a question about a codebase and the candidate's answer, evaluate how well they understood and explained their code.
+
+Respond ONLY with a JSON object like this:
+{
+  "score": 1,
+  "feedback": "Brief feedback here",
+  "confident": true
+}
+
+Where:
+- score is 0 (poor) or 1 (good)
+- feedback is 1-2 sentences of honest feedback
+- confident is true if they clearly understood, false if they were vague"""
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": f"Question: {question}\n\nAnswer: {answer}"}
+    ]
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            GROQ_URL,
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.3-70b-versatile",
+                "messages": messages,
+                "temperature": 0.3,
+                "max_tokens": 150
+            },
+            timeout=30.0
+        )
+
+        result = response.json()
+        text = result["choices"][0]["message"]["content"]
+        
+        try:
+            import json
+            clean = text.replace("```json", "").replace("```", "").strip()
+            return json.loads(clean)
+        except:
+            return {"score": 0, "feedback": "Could not evaluate answer", "confident": False}
