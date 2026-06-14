@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, Github, Brain, Target, Zap, Shield } from 'lucide-react'
+import { ArrowRight, Brain, Target, Zap, Shield } from 'lucide-react'
 
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState('')
@@ -23,8 +23,7 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-4">
           <a href="https://github.com" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm">
-            <Github className="w-4 h-4" />
-            GitHub
+            Github
           </a>
         </div>
       </nav>
