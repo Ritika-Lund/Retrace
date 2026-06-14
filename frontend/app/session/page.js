@@ -73,9 +73,30 @@ export default function SessionPage() {
       <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-  onClick={() => {
-    const score = Math.floor(messages.filter(m => m.role === 'user').length * 0.6)
-    const total = messages.filter(m => m.role === 'user').length
+  onClick={async () => {
+    const userMessages = messages.filter(m => m.role === 'user')
+    const assistantMessages = messages.filter(m => m.role === 'assistant')
+    
+    let score = 0
+    for (let i = 0; i < userMessages.length; i++) {
+      try {
+        const res = await fetch('http://localhost:8000/interview/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: assistantMessages[i]?.content || '',
+            answer: userMessages[i]?.content || '',
+            repo_url: repoUrl
+          })
+        })
+        const data = await res.json()
+        if (data.confident) score++
+      } catch (err) {
+        console.error('Evaluation error:', err)
+      }
+    }
+    
+    const total = userMessages.length
     router.push(`/results?score=${score}&total=${total}&repo=${encodeURIComponent(repoUrl)}`)
   }}
   className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-lg px-3 py-2 text-sm text-zinc-300"
