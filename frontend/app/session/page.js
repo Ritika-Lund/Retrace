@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Brain, Send, ArrowLeft, Loader2 } from 'lucide-react'
+import { Brain, Send, ArrowLeft, Loader2,StopCircle } from 'lucide-react'
 
 export default function SessionPage() {
   const searchParams = useSearchParams()
@@ -73,11 +73,16 @@ export default function SessionPage() {
       <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => router.push('/')}
-            className="text-zinc-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+  onClick={() => {
+    const score = Math.floor(messages.filter(m => m.role === 'user').length * 0.6)
+    const total = messages.filter(m => m.role === 'user').length
+    router.push(`/results?score=${score}&total=${total}&repo=${encodeURIComponent(repoUrl)}`)
+  }}
+  className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-lg px-3 py-2 text-sm text-zinc-300"
+>
+  <StopCircle className="w-4 h-4 text-red-400" />
+  End Interview
+</button>
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-violet-400" />
             <span className="font-semibold">Retrace</span>
