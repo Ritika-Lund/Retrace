@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Brain, Send, ArrowLeft, Loader2,StopCircle } from 'lucide-react'
+import { Brain, Send, ArrowLeft, Loader2, StopCircle } from 'lucide-react'
 
 export default function SessionPage() {
   const searchParams = useSearchParams()
@@ -13,6 +13,7 @@ export default function SessionPage() {
   const [userInput, setUserInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [starting, setStarting] = useState(true)
+  const [ending, setEnding] = useState(false)
   const [repoSummary, setRepoSummary] = useState(null)
   const [companyMode, setCompanyMode] = useState('generic')
 
@@ -43,12 +44,10 @@ export default function SessionPage() {
 
   const sendMessage = async () => {
     if (!userInput.trim() || loading) return
-
     const newMessages = [...messages, { role: 'user', content: userInput }]
     setMessages(newMessages)
     setUserInput('')
     setLoading(true)
-
     try {
       const res = await fetch('http://localhost:8000/interview/continue', {
         method: 'POST',
@@ -67,17 +66,14 @@ export default function SessionPage() {
     setLoading(false)
   }
 
-  return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
-      {/* Header */}
-      <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-  onClick={async () => {
+  const endInterview = async () => {
+    setEnding(true)
     const userMessages = messages.filter(m => m.role === 'user')
     const assistantMessages = messages.filter(m => m.role === 'assistant')
-    
+
     let score = 0
+    const feedbacks = []
+
     for (let i = 0; i < userMessages.length; i++) {
       try {
         const res = await fetch('http://localhost:8000/interview/evaluate', {
@@ -91,19 +87,37 @@ export default function SessionPage() {
         })
         const data = await res.json()
         if (data.confident) score++
+        feedbacks.push({
+          question: assistantMessages[i]?.content || '',
+          answer: userMessages[i]?.content || '',
+          feedback: data.feedback,
+          confident: data.confident
+        })
       } catch (err) {
         console.error('Evaluation error:', err)
       }
     }
-    
+
     const total = userMessages.length
-    router.push(`/results?score=${score}&total=${total}&repo=${encodeURIComponent(repoUrl)}`)
-  }}
-  className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-lg px-3 py-2 text-sm text-zinc-300"
->
-  <StopCircle className="w-4 h-4 text-red-400" />
-  End Interview
-</button>
+    // Store in sessionStorage instead of URL to avoid length issues
+    sessionStorage.setItem('retrace_feedback', JSON.stringify(feedbacks))
+    sessionStorage.setItem('retrace_score', score)
+    sessionStorage.setItem('retrace_total', total)
+    sessionStorage.setItem('retrace_repo', repoUrl)
+    router.push('/results')
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* Header */}
+      <div className="border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.push('/')}
+            className="text-zinc-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-violet-400" />
             <span className="font-semibold">Retrace</span>
@@ -115,17 +129,27 @@ export default function SessionPage() {
           )}
         </div>
 
-        {/* Company Mode Selector */}
-        <select
-          value={companyMode}
-          onChange={(e) => setCompanyMode(e.target.value)}
-          className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
-        >
-          <option value="generic">Generic Senior Engineer</option>
-          <option value="meta">Meta Interview</option>
-          <option value="google">Google Interview</option>
-          <option value="startup">Startup CTO</option>
-        </select>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={endInterview}
+            disabled={ending || starting}
+            className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 transition-colors rounded-lg px-3 py-2 text-sm text-zinc-300"
+          >
+            <StopCircle className="w-4 h-4 text-red-400" />
+            {ending ? 'Evaluating...' : 'End Interview'}
+          </button>
+
+          <select
+            value={companyMode}
+            onChange={(e) => setCompanyMode(e.target.value)}
+            className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
+          >
+            <option value="generic">Generic Senior Engineer</option>
+            <option value="meta">Meta Interview</option>
+            <option value="google">Google Interview</option>
+            <option value="startup">Startup CTO</option>
+          </select>
+        </div>
       </div>
 
       {/* Repo Summary Bar */}
@@ -206,4 +230,4 @@ export default function SessionPage() {
       </div>
     </div>
   )
-} 
+}

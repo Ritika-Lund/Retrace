@@ -1,14 +1,28 @@
 'use client'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Brain, ArrowLeft, RotateCcw, TrendingUp, MessageSquare } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { Brain, ArrowLeft, RotateCcw, TrendingUp, MessageSquare, CheckCircle, XCircle } from 'lucide-react'
 
 export default function ResultsPage() {
-  const searchParams = useSearchParams()
   const router = useRouter()
+  const [score, setScore] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [repoUrl, setRepoUrl] = useState('')
+  const [feedbackList, setFeedbackList] = useState([])
+  const [loaded, setLoaded] = useState(false)
 
-  const score = parseInt(searchParams.get('score') || '0')
-  const total = parseInt(searchParams.get('total') || '0')
-  const repoUrl = searchParams.get('repo') || ''
+  useEffect(() => {
+    const s = parseInt(sessionStorage.getItem('retrace_score') || '0')
+    const t = parseInt(sessionStorage.getItem('retrace_total') || '0')
+    const r = sessionStorage.getItem('retrace_repo') || ''
+    const f = JSON.parse(sessionStorage.getItem('retrace_feedback') || '[]')
+    setScore(s)
+    setTotal(t)
+    setRepoUrl(r)
+    setFeedbackList(f)
+    setLoaded(true)
+  }, [])
+
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0
 
   const getScoreColor = () => {
@@ -29,14 +43,17 @@ export default function ResultsPage() {
     return '💀'
   }
 
+  if (!loaded) return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <p className="text-zinc-400">Loading results...</p>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
       <div className="border-b border-zinc-800 px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={() => router.push('/')}
-          className="text-zinc-400 hover:text-white transition-colors"
-        >
+        <button onClick={() => router.push('/')} className="text-zinc-400 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
@@ -45,12 +62,11 @@ export default function ResultsPage() {
         </div>
       </div>
 
-      {/* Results */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
-        <div className="max-w-2xl w-full text-center">
+      <div className="flex-1 px-4 py-12">
+        <div className="max-w-2xl mx-auto">
 
-          {/* Score Circle */}
-          <div className="mb-8">
+          {/* Score */}
+          <div className="text-center mb-12">
             <div className="text-8xl font-bold mb-2">
               <span className={getScoreColor()}>{percentage}%</span>
             </div>
@@ -60,21 +76,51 @@ export default function ResultsPage() {
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center">
               <MessageSquare className="w-6 h-6 text-violet-400 mb-2 mx-auto" />
               <div className="text-3xl font-bold mb-1">{total}</div>
               <div className="text-zinc-400 text-sm">Questions answered</div>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center">
               <TrendingUp className="w-6 h-6 text-violet-400 mb-2 mx-auto" />
               <div className="text-3xl font-bold mb-1">{score}</div>
               <div className="text-zinc-400 text-sm">Confident answers</div>
             </div>
           </div>
 
+          {/* Feedback Breakdown */}
+          {feedbackList.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-4">Answer Breakdown</h2>
+              <div className="space-y-4">
+                {feedbackList.map((item, i) => (
+                  <div key={i} className={`bg-zinc-900 border rounded-xl p-5 ${item.confident ? 'border-green-500/30' : 'border-red-500/30'}`}>
+                    <div className="flex items-start gap-3">
+                      {item.confident
+                        ? <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                        : <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                      }
+                      <div>
+                        <p className="text-zinc-300 text-sm font-medium mb-1">
+                          Q{i + 1}: {item.question.slice(0, 120)}...
+                        </p>
+                        <p className="text-zinc-500 text-sm mb-2">
+                          Your answer: {item.answer.slice(0, 100)}...
+                        </p>
+                        <p className={`text-sm font-medium ${item.confident ? 'text-green-400' : 'text-red-400'}`}>
+                          {item.feedback}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Repo */}
           {repoUrl && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-8 text-left">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-8">
               <p className="text-zinc-500 text-xs mb-1">Repository reviewed</p>
               <p className="text-zinc-300 text-sm font-mono">
                 {repoUrl.replace('https://github.com/', '')}

@@ -51,15 +51,13 @@ async def continue_interview(request: ContinueInterviewRequest):
         return {"question": question}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 @router.post("/evaluate")
 async def evaluate(request: EvaluateRequest):
     try:
-        repo_data = parse_repo(request.repo_url)
         result = await evaluate_answer(
             question=request.question,
             answer=request.answer,
-            repo_data=repo_data
+            repo_data={}
         )
         return result
     except Exception as e:
