@@ -1,6 +1,7 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import { Brain, ArrowLeft, RotateCcw, TrendingUp, MessageSquare, CheckCircle, XCircle } from 'lucide-react'
 
 export default function ResultsPage() {
@@ -20,7 +21,20 @@ export default function ResultsPage() {
     setTotal(t)
     setRepoUrl(r)
     setFeedbackList(f)
-    setLoaded(true)
+    setLoaded(true)// Save session to Supabase
+const saveSession = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  await supabase.from('sessions').insert({
+    user_id: user.id,
+    repo_url: r,
+    score: s,
+    total: t,
+    percentage: t > 0 ? Math.round((s / t) * 100) : 0,
+    feedback: f
+  })
+}
+saveSession()
   }, [])
 
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0
