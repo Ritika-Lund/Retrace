@@ -102,6 +102,47 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section className="px-8 py-24 border-t border-zinc-800">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">How it works</h2>
+          <p className="text-zinc-400 text-center mb-12">Three steps. No setup. No accounts required to try.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">1</div>
+              <h3 className="font-semibold mb-2">Paste your repo</h3>
+              <p className="text-zinc-400 text-sm">Drop in any public GitHub repository URL — yours or one you contributed to.</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">2</div>
+              <h3 className="font-semibold mb-2">Get interrogated</h3>
+              <p className="text-zinc-400 text-sm">The AI reads your code and asks specific, pointed questions about decisions you actually made.</p>
+            </div>
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">3</div>
+              <h3 className="font-semibold mb-2">See your blind spots</h3>
+              <p className="text-zinc-400 text-sm">Get an honest score and a weakness map showing exactly what you can't yet explain confidently.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy */}
+      <section className="px-8 py-16 border-t border-zinc-800 bg-zinc-950">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-xl font-semibold mb-3">What happens to your code</h2>
+          <p className="text-zinc-400 text-sm leading-relaxed mb-4">
+            Retrace temporarily clones your public repository to read its file structure, dependencies, and commit history. 
+            This is used only to generate interview questions and is deleted from our server immediately after each session ends. 
+            We do not permanently store your source code. Only your conversation text and scores are saved to your account, 
+            so you can track progress over time.
+          </p>
+          <p className="text-zinc-500 text-xs">
+            Retrace only works with public repositories. Never paste proprietary or confidential code you don't have permission to share.
+          </p>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-zinc-800 px-8 py-8 text-center text-zinc-600 text-sm">
         Retrace — Open source. Free forever.
