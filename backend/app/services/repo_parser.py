@@ -13,8 +13,22 @@ ALLOWED_EXTENSIONS = {
 MAX_FILE_SIZE = 50000
 
 def clone_repo(repo_url: str) -> str:
+    if not repo_url.startswith("https://github.com/"):
+        raise ValueError("Please provide a valid GitHub repository URL (must start with https://github.com/)")
+    
     temp_dir = tempfile.mkdtemp()
-    git.Repo.clone_from(repo_url, temp_dir)
+    try:
+        git.Repo.clone_from(repo_url, temp_dir, depth=50)
+    except git.exc.GitCommandError as e:
+        error_str = str(e).lower()
+        if "not found" in error_str or "repository not found" in error_str:
+            raise ValueError("Repository not found. Check the URL or make sure the repo is public.")
+        elif "could not read username" in error_str or "authentication" in error_str:
+            raise ValueError("This appears to be a private repository. Retrace only works with public repos right now.")
+        elif "timeout" in error_str or "could not resolve" in error_str:
+            raise ValueError("Could not reach GitHub. Please check the URL and try again.")
+        else:
+            raise ValueError("Could not clone this repository. Please check the URL and try again.")
     return temp_dir
 
 def parse_repo(repo_url: str) -> dict:
@@ -23,8 +37,13 @@ def parse_repo(repo_url: str) -> dict:
         temp_dir = clone_repo(repo_url)
         repo = git.Repo(temp_dir)
 
+        
         files = {}
+        file_check_count = 0
         for file_path in Path(temp_dir).rglob('*'):
+            file_check_count += 1
+            if file_check_count > 3000:
+                raise ValueError("This repository is too large for Retrace right now. Try a smaller repo (under 3000 files).")
             if file_path.is_file():
                 if any(part.startswith('.') for part in file_path.parts):
                     continue

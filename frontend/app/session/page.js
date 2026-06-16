@@ -25,11 +25,15 @@ export default function SessionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ repo_url: repoUrl, company_mode: companyMode })
       })
+      if (!res.ok) {
+        const errData = await res.json()
+        throw new Error(errData.detail || 'Failed to load repository')
+      }
       const data = await res.json()
       setRepoSummary(data.repo_summary)
       setMessages([{ role: 'assistant', content: data.question }])
     } catch (err) {
-      setMessages([{ role: 'assistant', content: 'Failed to load repository. Please check the URL and try again.' }])
+      setMessages([{ role: 'assistant', content: err.message || 'Failed to load repository. Please check the URL and try again.' }])
     }
     setStarting(false)
   }

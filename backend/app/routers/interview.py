@@ -36,8 +36,10 @@ async def start_interview(request: StartInterviewRequest):
                 "commits": repo_data["commits"][:5]
             }
         }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Something went wrong while reading this repository. Please try again.")
 
 @router.post("/continue")
 async def continue_interview(request: ContinueInterviewRequest):
