@@ -111,8 +111,8 @@ export default function Home() {
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">1</div>
               <h3 className="font-semibold mb-2">Paste your repo</h3>
-              <p className="text-zinc-400 text-sm">Drop in any public GitHub repository URL — yours or one you contributed to.</p>
-            </div>
+              <p className="text-zinc-400 text-sm">Drop in any public GitHub repository URL. Works best on projects you've personally written or contributed to.</p>
+            </div>  
             <div className="text-center">
               <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">2</div>
               <h3 className="font-semibold mb-2">Get interrogated</h3>
