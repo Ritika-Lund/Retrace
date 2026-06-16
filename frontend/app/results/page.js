@@ -25,6 +25,8 @@ export default function ResultsPage() {
 const saveSession = async () => {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return
+  
+  // Save session
   await supabase.from('sessions').insert({
     user_id: user.id,
     repo_url: r,
@@ -33,6 +35,34 @@ const saveSession = async () => {
     percentage: t > 0 ? Math.round((s / t) * 100) : 0,
     feedback: f
   })
+
+  // Save weaknesses from failed answers
+  const failedAnswers = f.filter(item => !item.confident)
+  for (const failed of failedAnswers) {
+    const topic = failed.question.slice(0, 100)
+    const { data: existing } = await supabase
+      .from('weaknesses')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('topic', topic)
+      .single()
+
+    if (existing) {
+      await supabase
+        .from('weaknesses')
+        .update({
+          fail_count: existing.fail_count + 1,
+          last_seen: new Date().toISOString()
+        })
+        .eq('id', existing.id)
+    } else {
+      await supabase.from('weaknesses').insert({
+        user_id: user.id,
+        topic,
+        repo_url: r
+      })
+    }
+  }
 }
 saveSession()
   }, [])

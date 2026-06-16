@@ -10,6 +10,7 @@ export default function Dashboard() {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [repoUrl, setRepoUrl] = useState('')
+  const [weaknesses, setWeaknesses] = useState([])
 
   useEffect(() => {
     const getUser = async () => {
@@ -20,6 +21,7 @@ export default function Dashboard() {
       }
       setUser(user)
       fetchSessions(user.id)
+      fetchWeaknesses(user.id)
     }
     getUser()
   }, [])
@@ -32,6 +34,16 @@ export default function Dashboard() {
       .order('created_at', { ascending: false })
     if (!error) setSessions(data || [])
     setLoading(false)
+  }
+
+  const fetchWeaknesses = async (userId) => {
+    const { data, error } = await supabase
+      .from('weaknesses')
+      .select('*')
+      .eq('user_id', userId)
+      .order('fail_count', { ascending: false })
+      .limit(5)
+    if (!error) setWeaknesses(data || [])
   }
 
   const handleSignOut = async () => {
@@ -121,6 +133,34 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {/* Weakness Map */}
+        {weaknesses.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-lg font-semibold mb-4">🧠 Weakness Map</h2>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+              <p className="text-zinc-400 text-sm mb-4">Topics you keep struggling to explain:</p>
+              <div className="space-y-3">
+                {weaknesses.map((w) => (
+                  <div key={w.id} className="flex items-center gap-4">
+                    <div className="w-6 h-6 rounded-full bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400 text-xs font-bold flex-shrink-0">
+                      {w.fail_count}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-zinc-300 text-sm mb-1">{w.topic}...</p>
+                      <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                        <div
+                          className="bg-red-500 h-1.5 rounded-full"
+                          style={{ width: `${Math.min(w.fail_count * 20, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Session History */}
         <div>
