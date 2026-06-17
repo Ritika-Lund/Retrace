@@ -42,7 +42,7 @@ export default function ResultsPage() {
 
       // Advance or resolve weaknesses that were answered confidently this time
       for (const good of confidentAnswers) {
-        const topic = good.question.slice(0, 100)
+        const topic = good.topic || good.question.slice(0, 100)
         const { data: existingWeak } = await supabase
           .from('weaknesses')
           .select('*')
@@ -68,7 +68,7 @@ export default function ResultsPage() {
         }
       }
       for (const failed of failedAnswers) {
-        const topic = failed.question.slice(0, 100)
+        const topic = failed.topic || failed.question.slice(0, 100)
         const { data: existing } = await supabase
           .from('weaknesses')
           .select('*')

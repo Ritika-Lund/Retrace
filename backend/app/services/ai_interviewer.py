@@ -121,7 +121,8 @@ Respond ONLY with a JSON object like this:
   "score": 1,
   "feedback": "Brief feedback here",
   "confident": true,
-  "explanation": null
+  "explanation": null,
+  "topic": "Short topic label here"
 }
 
 Where:
@@ -129,6 +130,7 @@ Where:
 - feedback is 1-2 sentences of honest, direct feedback on their answer
 - confident is true if they clearly understood, false if they were vague, wrong, or evasive
 - explanation: IF confident is false, write a short 2-3 sentence explanation of what a strong answer would have covered, in a mentor tone, helping them understand the concept for next time. If confident is true, set explanation to null.
+- topic: a SHORT (3-8 word) clean label summarizing what technical concept this question was actually about, written as a noun phrase, e.g. "Choice of Next.js for frontend", "Layered architecture in ScheduleService", "Client-side routing with useRouter". This must NOT be a sentence or a copy of the question wording — it is a concise topic tag.
 
 Keep the tone direct but constructive — like a senior engineer who wants the candidate to actually learn, not just feel bad.
 

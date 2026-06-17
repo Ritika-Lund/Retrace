@@ -24,6 +24,7 @@ class EvaluateRequest(BaseModel):
 async def start_interview(request: StartInterviewRequest):
     try:
         repo_data = parse_repo(request.repo_url)
+        print("DUE TOPICS RECEIVED:", request.due_topics)
         question = await generate_interview_question(
             repo_data=repo_data,
             conversation_history=[],

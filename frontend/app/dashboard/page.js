@@ -252,7 +252,7 @@ const getDaysLeft = () => {
                       {w.fail_count}
                     </div>
                     <div className="flex-1">
-                      <p className="text-zinc-300 text-sm mb-1">{w.topic}...</p>
+                      <p className="text-zinc-300 text-sm mb-1">{w.topic}</p>
                       <div className="w-full bg-zinc-800 rounded-full h-1.5">
                         <div
                           className="bg-red-500 h-1.5 rounded-full"

@@ -117,7 +117,9 @@ export default function SessionPage() {
           answer: userMessages[i]?.content || '',
           feedback: data.feedback,
           confident: data.confident,
-          explanation: data.explanation
+          explanation: data.explanation,
+          topic: data.topic || (assistantMessages[i]?.content || '').slice(0, 60)
+
         })
       } catch (err) {
         console.error('Evaluation error:', err)
