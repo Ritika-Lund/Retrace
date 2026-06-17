@@ -95,7 +95,8 @@ export default function SessionPage() {
           question: assistantMessages[i]?.content || '',
           answer: userMessages[i]?.content || '',
           feedback: data.feedback,
-          confident: data.confident
+          confident: data.confident,
+          explanation: data.explanation
         })
       } catch (err) {
         console.error('Evaluation error:', err)

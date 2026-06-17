@@ -99,21 +99,27 @@ async def evaluate_answer(
     answer: str,
     repo_data: dict
 ) -> dict:
-    
-    system_prompt = """You are a technical interview evaluator.
+
+    system_prompt = """You are a technical interview evaluator and mentor.
 Given a question about a codebase and the candidate's answer, evaluate how well they understood and explained their code.
 
 Respond ONLY with a JSON object like this:
 {
   "score": 1,
   "feedback": "Brief feedback here",
-  "confident": true
+  "confident": true,
+  "explanation": null
 }
 
 Where:
 - score is 0 (poor) or 1 (good)
-- feedback is 1-2 sentences of honest feedback
-- confident is true if they clearly understood, false if they were vague"""
+- feedback is 1-2 sentences of honest, direct feedback on their answer
+- confident is true if they clearly understood, false if they were vague, wrong, or evasive
+- explanation: IF confident is false, write a short 2-3 sentence explanation of what a strong answer would have covered, in a mentor tone, helping them understand the concept for next time. If confident is true, set explanation to null.
+
+Keep the tone direct but constructive — like a senior engineer who wants the candidate to actually learn, not just feel bad.
+
+IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with backslashes (e.g. write "frontend/lib/supabase.js" using forward slashes, not "frontend\\lib\\supabase.js"). Do not include any characters that would break JSON parsing."""
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -131,17 +137,24 @@ Where:
                 "model": "llama-3.3-70b-versatile",
                 "messages": messages,
                 "temperature": 0.3,
-                "max_tokens": 150
+                "max_tokens": 300
             },
             timeout=30.0
         )
 
         result = response.json()
         text = result["choices"][0]["message"]["content"]
-        
+        print("EVALUATE RAW RESPONSE:", text)
+
         try:
             import json
             clean = text.replace("```json", "").replace("```", "").strip()
-            return json.loads(clean)
-        except:
-            return {"score": 0, "feedback": "Could not evaluate answer", "confident": False}
+            parsed = json.loads(clean)
+            return parsed
+        except Exception as e:
+            try:
+                # Fallback: try fixing common backslash issues and re-parse
+                fixed = clean.replace("\\", "/")
+                return json.loads(fixed)
+            except Exception:
+                return {"score": 0, "feedback": "Could not evaluate answer", "confident": False, "explanation": None}

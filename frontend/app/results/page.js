@@ -21,50 +21,49 @@ export default function ResultsPage() {
     setTotal(t)
     setRepoUrl(r)
     setFeedbackList(f)
-    setLoaded(true)// Save session to Supabase
-const saveSession = async () => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  
-  // Save session
-  await supabase.from('sessions').insert({
-    user_id: user.id,
-    repo_url: r,
-    score: s,
-    total: t,
-    percentage: t > 0 ? Math.round((s / t) * 100) : 0,
-    feedback: f
-  })
+    setLoaded(true)
 
-  // Save weaknesses from failed answers
-  const failedAnswers = f.filter(item => !item.confident)
-  for (const failed of failedAnswers) {
-    const topic = failed.question.slice(0, 100)
-    const { data: existing } = await supabase
-      .from('weaknesses')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('topic', topic)
-      .single()
+    const saveSession = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    if (existing) {
-      await supabase
-        .from('weaknesses')
-        .update({
-          fail_count: existing.fail_count + 1,
-          last_seen: new Date().toISOString()
-        })
-        .eq('id', existing.id)
-    } else {
-      await supabase.from('weaknesses').insert({
+      await supabase.from('sessions').insert({
         user_id: user.id,
-        topic,
-        repo_url: r
+        repo_url: r,
+        score: s,
+        total: t,
+        percentage: t > 0 ? Math.round((s / t) * 100) : 0,
+        feedback: f
       })
+
+      const failedAnswers = f.filter(item => !item.confident)
+      for (const failed of failedAnswers) {
+        const topic = failed.question.slice(0, 100)
+        const { data: existing } = await supabase
+          .from('weaknesses')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('topic', topic)
+          .single()
+
+        if (existing) {
+          await supabase
+            .from('weaknesses')
+            .update({
+              fail_count: existing.fail_count + 1,
+              last_seen: new Date().toISOString()
+            })
+            .eq('id', existing.id)
+        } else {
+          await supabase.from('weaknesses').insert({
+            user_id: user.id,
+            topic,
+            repo_url: r
+          })
+        }
+      }
     }
-  }
-}
-saveSession()
+    saveSession()
   }, [])
 
   const percentage = total > 0 ? Math.round((score / total) * 100) : 0
@@ -144,16 +143,22 @@ saveSession()
                         ? <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                         : <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                       }
-                      <div>
+                      <div className="flex-1">
                         <p className="text-zinc-300 text-sm font-medium mb-1">
                           Q{i + 1}: {item.question.slice(0, 120)}...
                         </p>
                         <p className="text-zinc-500 text-sm mb-2">
                           Your answer: {item.answer.slice(0, 100)}...
                         </p>
-                        <p className={`text-sm font-medium ${item.confident ? 'text-green-400' : 'text-red-400'}`}>
+                        <p className={`text-sm font-medium mb-2 ${item.confident ? 'text-green-400' : 'text-red-400'}`}>
                           {item.feedback}
                         </p>
+                        {item.explanation && (
+                          <div className="bg-violet-500/10 border border-violet-500/20 rounded-lg p-3 mt-2">
+                            <p className="text-violet-300 text-xs font-semibold mb-1">💡 What a strong answer would cover</p>
+                            <p className="text-zinc-300 text-sm">{item.explanation}</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
