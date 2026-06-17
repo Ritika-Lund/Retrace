@@ -30,7 +30,8 @@ def build_codebase_summary(repo_data: dict) -> str:
 async def generate_interview_question(
     repo_data: dict,
     conversation_history: list,
-    company_mode: str = "generic"
+    company_mode: str = "generic",
+    due_topics: list = None
 ) -> str:
 
     codebase_summary = build_codebase_summary(repo_data)
@@ -44,11 +45,23 @@ async def generate_interview_question(
 
     interviewer_style = company_styles.get(company_mode, company_styles["generic"])
 
+    due_topics_text = ""
+    if due_topics:
+        topics_list = "\n".join(f"- {t}" for t in due_topics[:3])
+        due_topics_text = f"""
+
+SPACED REPETITION — PRIORITY TOPICS:
+The candidate previously struggled to confidently explain these exact topics in past sessions. 
+If it makes sense given the conversation, work AT LEAST ONE of these topics back into your questioning during this session, rephrased naturally:
+{topics_list}
+"""
+
     system_prompt = f"""You are {interviewer_style}.
 You have thoroughly reviewed the candidate's codebase below and are now interviewing them about it.
 
 CODEBASE CONTEXT:
 {codebase_summary}
+{due_topics_text}
 
 INTERVIEW RULES:
 - Ask ONE specific question at a time about their actual code

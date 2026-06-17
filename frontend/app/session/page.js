@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Brain, Send, ArrowLeft, Loader2, StopCircle } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export default function SessionPage() {
   const searchParams = useSearchParams()
@@ -16,14 +17,19 @@ export default function SessionPage() {
   const [ending, setEnding] = useState(false)
   const [repoSummary, setRepoSummary] = useState(null)
   const [companyMode, setCompanyMode] = useState('generic')
+  const [dueTopics, setDueTopics] = useState([])
 
-  const startInterview = async () => {
+  const startInterview = async (topics=[]) => {
     setStarting(true)
     try {
       const res = await fetch('http://localhost:8000/interview/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repo_url: repoUrl, company_mode: companyMode })
+        body: JSON.stringify({ 
+          repo_url: repoUrl, 
+          company_mode: companyMode,
+          due_topics: topics
+        })
       })
       if (!res.ok) {
         const errData = await res.json()
@@ -38,8 +44,23 @@ export default function SessionPage() {
     setStarting(false)
   }
 
-  useEffect(() => {
-    if (repoUrl) startInterview()
+ useEffect(() => {
+    const init = async () => {
+      let topics = []
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data } = await supabase
+          .from('weaknesses')
+          .select('topic')
+          .eq('user_id', user.id)
+          .eq('resolved', false)
+          .lte('next_review_at', new Date().toISOString())
+        topics = (data || []).map(d => d.topic)
+        setDueTopics(topics)
+      }
+      if (repoUrl) startInterview(topics)
+    }
+    init()
   }, [repoUrl])
 
   useEffect(() => {

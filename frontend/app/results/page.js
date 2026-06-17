@@ -36,7 +36,37 @@ export default function ResultsPage() {
         feedback: f
       })
 
+      
       const failedAnswers = f.filter(item => !item.confident)
+      const confidentAnswers = f.filter(item => item.confident)
+
+      // Advance or resolve weaknesses that were answered confidently this time
+      for (const good of confidentAnswers) {
+        const topic = good.question.slice(0, 100)
+        const { data: existingWeak } = await supabase
+          .from('weaknesses')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('topic', topic)
+          .single()
+
+        if (existingWeak) {
+          const newStage = existingWeak.review_stage + 1
+          const stageDays = [1, 3, 7, 14]
+          const isResolved = newStage >= stageDays.length
+          const nextReview = new Date()
+          nextReview.setDate(nextReview.getDate() + (stageDays[newStage] || 14))
+
+          await supabase
+            .from('weaknesses')
+            .update({
+              review_stage: newStage,
+              next_review_at: nextReview.toISOString(),
+              resolved: isResolved
+            })
+            .eq('id', existingWeak.id)
+        }
+      }
       for (const failed of failedAnswers) {
         const topic = failed.question.slice(0, 100)
         const { data: existing } = await supabase
@@ -47,18 +77,28 @@ export default function ResultsPage() {
           .single()
 
         if (existing) {
+          // Failed again — reset stage back, push review out by 1 day
+          const nextReview = new Date()
+          nextReview.setDate(nextReview.getDate() + 1)
           await supabase
             .from('weaknesses')
             .update({
               fail_count: existing.fail_count + 1,
-              last_seen: new Date().toISOString()
+              last_seen: new Date().toISOString(),
+              review_stage: 0,
+              next_review_at: nextReview.toISOString(),
+              resolved: false
             })
             .eq('id', existing.id)
         } else {
+          const nextReview = new Date()
+          nextReview.setDate(nextReview.getDate() + 1)
           await supabase.from('weaknesses').insert({
             user_id: user.id,
             topic,
-            repo_url: r
+            repo_url: r,
+            review_stage: 0,
+            next_review_at: nextReview.toISOString()
           })
         }
       }

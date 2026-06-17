@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [weaknesses, setWeaknesses] = useState([])
   const [interviewDate, setInterviewDate] = useState('')
   const [savedDate, setSavedDate] = useState(null)
+  const [dueReviews, setDueReviews] = useState([])
 
   useEffect(() => {
     const getUser = async () => {
@@ -24,11 +25,12 @@ export default function Dashboard() {
       setUser(user)
       fetchSessions(user.id)
       fetchWeaknesses(user.id)
+      fetchDueReviews(user.id)
       fetchSettings(user.id)
     }
     getUser()
   }, [])
-
+  
   const fetchSessions = async (userId) => {
     const { data, error } = await supabase
       .from('sessions')
@@ -44,9 +46,20 @@ export default function Dashboard() {
       .from('weaknesses')
       .select('*')
       .eq('user_id', userId)
+      .eq('resolved', false)
       .order('fail_count', { ascending: false })
       .limit(5)
     if (!error) setWeaknesses(data || [])
+  }
+
+  const fetchDueReviews = async (userId) => {
+    const { data, error } = await supabase
+      .from('weaknesses')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('resolved', false)
+      .lte('next_review_at', new Date().toISOString())
+    if (!error) setDueReviews(data || [])
   }
   const fetchSettings = async (userId) => {
   const { data, error } = await supabase
@@ -150,6 +163,15 @@ const getDaysLeft = () => {
             <div className="text-zinc-400 text-sm">Repos reviewed</div>
           </div>
         </div>
+        {/* Due Reviews */}
+  {dueReviews.length > 0 && (
+    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-5 mb-6 flex items-center justify-between">
+      <div>
+        <p className="font-semibold text-yellow-300 mb-1">⏰ {dueReviews.length} topic{dueReviews.length > 1 ? 's' : ''} due for review</p>
+        <p className="text-zinc-400 text-sm">Start a new interview and Retrace will re-test these automatically.</p>
+      </div>
+    </div>
+  )}
         {/* Daily Brief / Countdown */}
 <div className="bg-gradient-to-br from-violet-600/20 to-zinc-900 border border-violet-500/30 rounded-xl p-6 mb-10">
   <h2 className="text-lg font-semibold mb-4">📅 Interview Countdown</h2>

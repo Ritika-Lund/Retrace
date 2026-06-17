@@ -8,6 +8,7 @@ router = APIRouter(prefix="/interview", tags=["interview"])
 class StartInterviewRequest(BaseModel):
     repo_url: str
     company_mode: str = "generic"
+    due_topics: list[str] = []
 
 class ContinueInterviewRequest(BaseModel):
     repo_url: str
@@ -26,7 +27,8 @@ async def start_interview(request: StartInterviewRequest):
         question = await generate_interview_question(
             repo_data=repo_data,
             conversation_history=[],
-            company_mode=request.company_mode
+            company_mode=request.company_mode,
+            due_topics=request.due_topics
         )
         return {
             "question": question,
