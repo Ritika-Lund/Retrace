@@ -110,9 +110,18 @@ Start with an opening question about their most significant architectural decisi
 async def evaluate_answer(
     question: str,
     answer: str,
-    repo_data: dict
+    repo_data: dict,
+    existing_topics: list = None
 ) -> dict:
+    existing_topics_text = ""
+    if existing_topics:
+        topics_list = "\n".join(f'- "{t}"' for t in existing_topics)
+        existing_topics_text = f"""
 
+EXISTING WEAKNESS TOPICS FOR THIS USER:
+{topics_list}
+
+If this question/answer is about the same underlying weakness as one of these, reuse that EXACT topic string verbatim for the "topic" field. Only invent a new short label if none of these fit."""
     system_prompt = """You are a technical interview evaluator and mentor.
 Given a question about a codebase and the candidate's answer, evaluate how well they understood and explained their code.
 
@@ -134,7 +143,7 @@ Where:
 
 Keep the tone direct but constructive — like a senior engineer who wants the candidate to actually learn, not just feel bad.
 
-IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with backslashes (e.g. write "frontend/lib/supabase.js" using forward slashes, not "frontend\\lib\\supabase.js"). Do not include any characters that would break JSON parsing."""
+IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with backslashes (e.g. write "frontend/lib/supabase.js" using forward slashes, not "frontend\\lib\\supabase.js"). Do not include any characters that would break JSON parsing."""+existing_topics_text
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -172,4 +181,4 @@ IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with b
                 fixed = clean.replace("\\", "/")
                 return json.loads(fixed)
             except Exception:
-                return {"score": 0, "feedback": "Could not evaluate answer", "confident": False, "explanation": None}
+                return {"score": 0, "feedback": "Could not evaluate answer", "confident": False, "explanation": None, "topic": "Unclear answer (parsing error)"}

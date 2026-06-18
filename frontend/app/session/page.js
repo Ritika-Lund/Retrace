@@ -98,7 +98,17 @@ export default function SessionPage() {
 
     let score = 0
     const feedbacks = []
-
+    const { data: { user } } = await supabase.auth.getUser()
+  let existingTopics = []
+  if (user) {
+    const { data: existingWeak } = await supabase
+      .from('weaknesses')
+      .select('topic')
+      .eq('user_id', user.id)
+      .eq('repo_url', repoUrl)
+      .eq('resolved', false)
+    existingTopics = (existingWeak || []).map(w => w.topic)
+  }
     for (let i = 0; i < userMessages.length; i++) {
       try {
         const res = await fetch('http://localhost:8000/interview/evaluate', {
@@ -107,7 +117,8 @@ export default function SessionPage() {
           body: JSON.stringify({
             question: assistantMessages[i]?.content || '',
             answer: userMessages[i]?.content || '',
-            repo_url: repoUrl
+            repo_url: repoUrl,
+            existing_topics: existingTopics
           })
         })
         const data = await res.json()

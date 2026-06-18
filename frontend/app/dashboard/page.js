@@ -187,7 +187,7 @@ const getDaysLeft = () => {
       {weaknesses.length > 0 && (
         <div className="bg-black/30 rounded-lg p-4">
           <p className="text-zinc-400 text-sm mb-2">🎯 Today's focus area:</p>
-          <p className="text-zinc-200 text-sm">{weaknesses[0]?.topic}...</p>
+          <p className="text-zinc-200 text-sm">{weaknesses[0]?.topic}</p>
         </div>
       )}
       <button

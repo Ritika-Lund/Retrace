@@ -19,6 +19,7 @@ class EvaluateRequest(BaseModel):
     question: str
     answer: str
     repo_url: str
+    existing_topics: list[str] = []
 
 @router.post("/start")
 async def start_interview(request: StartInterviewRequest):
@@ -62,7 +63,8 @@ async def evaluate(request: EvaluateRequest):
         result = await evaluate_answer(
             question=request.question,
             answer=request.answer,
-            repo_data={}
+            repo_data={},
+            existing_topics=request.existing_topics
         )
         return result
     except Exception as e:

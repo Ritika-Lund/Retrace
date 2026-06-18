@@ -1,6 +1,6 @@
 'use client'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState,useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Brain, ArrowLeft, RotateCcw, TrendingUp, MessageSquare, CheckCircle, XCircle } from 'lucide-react'
 
@@ -11,6 +11,7 @@ export default function ResultsPage() {
   const [repoUrl, setRepoUrl] = useState('')
   const [feedbackList, setFeedbackList] = useState([])
   const [loaded, setLoaded] = useState(false)
+  const hasSaved = useRef(false)
 
   useEffect(() => {
     const s = parseInt(sessionStorage.getItem('retrace_score') || '0')
@@ -24,6 +25,9 @@ export default function ResultsPage() {
     setLoaded(true)
 
     const saveSession = async () => {
+      if (hasSaved.current) return
+        hasSaved.current = true
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
