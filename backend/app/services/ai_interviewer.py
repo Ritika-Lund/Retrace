@@ -1,7 +1,6 @@
 import os
 import httpx
 from dotenv import load_dotenv
-
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -107,6 +106,7 @@ Start with an opening question about their most significant architectural decisi
         result = response.json()
         print("GROQ RESPONSE:", result)
         return result["choices"][0]["message"]["content"]
+
 async def evaluate_answer(
     question: str,
     answer: str,
@@ -115,13 +115,14 @@ async def evaluate_answer(
 ) -> dict:
     existing_topics_text = ""
     if existing_topics:
-        topics_list = "\n".join(f'- "{t}"' for t in existing_topics)
+        topics_list = "\n".join(f"{i}: {t}" for i, t in enumerate(existing_topics))
         existing_topics_text = f"""
 
-EXISTING WEAKNESS TOPICS FOR THIS USER:
+EXISTING WEAKNESS TOPICS (numbered list):
 {topics_list}
 
-If this question/answer is about the same underlying weakness as one of these, reuse that EXACT topic string verbatim for the "topic" field. Only invent a new short label if none of these fit."""
+Decide if this question/answer is about the SAME underlying weakness as one of these topics above — be generous here: "project structure", "architecture", "code organization", and "modularity" are all the SAME underlying weakness and should be treated as a match. Add a field "topic_index" to your JSON response: the number of the matching topic above, or -1 if truly none apply. If topic_index is NOT -1, the "topic" field should equal that exact existing topic string verbatim."""
+
     system_prompt = """You are a technical interview evaluator and mentor.
 Given a question about a codebase and the candidate's answer, evaluate how well they understood and explained their code.
 
@@ -131,7 +132,8 @@ Respond ONLY with a JSON object like this:
   "feedback": "Brief feedback here",
   "confident": true,
   "explanation": null,
-  "topic": "Short topic label here"
+  "topic": "Short topic label here",
+  "topic_index": -1
 }
 
 Where:
@@ -143,7 +145,7 @@ Where:
 
 Keep the tone direct but constructive — like a senior engineer who wants the candidate to actually learn, not just feel bad.
 
-IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with backslashes (e.g. write "frontend/lib/supabase.js" using forward slashes, not "frontend\\lib\\supabase.js"). Do not include any characters that would break JSON parsing."""+existing_topics_text
+IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with backslashes (e.g. write "frontend/lib/supabase.js" using forward slashes, not "frontend\\lib\\supabase.js"). Do not include any characters that would break JSON parsing.""" + existing_topics_text
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -174,11 +176,19 @@ IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with b
             import json
             clean = text.replace("```json", "").replace("```", "").strip()
             parsed = json.loads(clean)
+            if existing_topics and parsed.get("topic_index", -1) != -1:
+                idx = parsed["topic_index"]
+                if isinstance(idx, int) and 0 <= idx < len(existing_topics):
+                    parsed["topic"] = existing_topics[idx]
             return parsed
         except Exception as e:
             try:
-                # Fallback: try fixing common backslash issues and re-parse
                 fixed = clean.replace("\\", "/")
-                return json.loads(fixed)
+                parsed = json.loads(fixed)
+                if existing_topics and parsed.get("topic_index", -1) != -1:
+                    idx = parsed["topic_index"]
+                    if isinstance(idx, int) and 0 <= idx < len(existing_topics):
+                        parsed["topic"] = existing_topics[idx]
+                return parsed
             except Exception:
                 return {"score": 0, "feedback": "Could not evaluate answer", "confident": False, "explanation": None, "topic": "Unclear answer (parsing error)"}
