@@ -2,6 +2,18 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from app.services.repo_parser import parse_repo
 from app.services.ai_interviewer import generate_interview_question, evaluate_answer
+import time
+
+REPO_CACHE = {}
+CACHE_TTL_SECONDS = 600  # 10 minutes
+
+def get_cached_repo_data(repo_url: str) -> dict:
+    cached = REPO_CACHE.get(repo_url)
+    if cached and (time.time() - cached["timestamp"]) < CACHE_TTL_SECONDS:
+        return cached["data"]
+    repo_data = parse_repo(repo_url)
+    REPO_CACHE[repo_url] = {"data": repo_data, "timestamp": time.time()}
+    return repo_data
 
 router = APIRouter(prefix="/interview", tags=["interview"])
 
@@ -24,7 +36,7 @@ class EvaluateRequest(BaseModel):
 @router.post("/start")
 async def start_interview(request: StartInterviewRequest):
     try:
-        repo_data = parse_repo(request.repo_url)
+        repo_data = get_cached_repo_data(request.repo_url)
         print("DUE TOPICS RECEIVED:", request.due_topics)
         question = await generate_interview_question(
             repo_data=repo_data,
@@ -48,7 +60,7 @@ async def start_interview(request: StartInterviewRequest):
 @router.post("/continue")
 async def continue_interview(request: ContinueInterviewRequest):
     try:
-        repo_data = parse_repo(request.repo_url)
+        repo_data = get_cached_repo_data(request.repo_url)
         question = await generate_interview_question(
             repo_data=repo_data,
             conversation_history=request.conversation_history,
