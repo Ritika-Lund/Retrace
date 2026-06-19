@@ -14,6 +14,10 @@ export default function Dashboard() {
   const [interviewDate, setInterviewDate] = useState('')
   const [savedDate, setSavedDate] = useState(null)
   const [dueReviews, setDueReviews] = useState([])
+  const [sessionPage, setSessionPage] = useState(0)
+  const [hasMoreSessions, setHasMoreSessions] = useState(true)
+
+  const SESSIONS_PER_PAGE = 5
 
   useEffect(() => {
     const getUser = async () => {
@@ -30,14 +34,24 @@ export default function Dashboard() {
     }
     getUser()
   }, [])
-  
-  const fetchSessions = async (userId) => {
+
+  const fetchSessions = async (userId, page = 0) => {
+    const from = page * SESSIONS_PER_PAGE
+    const to = from + SESSIONS_PER_PAGE - 1
     const { data, error } = await supabase
       .from('sessions')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-    if (!error) setSessions(data || [])
+      .range(from, to)
+    if (!error) {
+      if (page === 0) {
+        setSessions(data || [])
+      } else {
+        setSessions(prev => [...prev, ...(data || [])])
+      }
+      setHasMoreSessions((data || []).length === SESSIONS_PER_PAGE)
+    }
     setLoading(false)
   }
 
@@ -61,44 +75,45 @@ export default function Dashboard() {
       .lte('next_review_at', new Date().toISOString())
     if (!error) setDueReviews(data || [])
   }
+
   const fetchSettings = async (userId) => {
-  const { data, error } = await supabase
-    .from('user_settings')
-    .select('*')
-    .eq('user_id', userId)
-    .single()
-  if (data) {
-    setSavedDate(data.interview_date)
-    setInterviewDate(data.interview_date || '')
-  }
-}
-
-const saveInterviewDate = async () => {
-  if (!user || !interviewDate) return
-  const { data: existing } = await supabase
-    .from('user_settings')
-    .select('*')
-    .eq('user_id', user.id)
-    .single()
-
-  if (existing) {
-    await supabase
+    const { data, error } = await supabase
       .from('user_settings')
-      .update({ interview_date: interviewDate })
+      .select('*')
+      .eq('user_id', userId)
+      .single()
+    if (data) {
+      setSavedDate(data.interview_date)
+      setInterviewDate(data.interview_date || '')
+    }
+  }
+
+  const saveInterviewDate = async () => {
+    if (!user || !interviewDate) return
+    const { data: existing } = await supabase
+      .from('user_settings')
+      .select('*')
       .eq('user_id', user.id)
-  } else {
-    await supabase
-      .from('user_settings')
-      .insert({ user_id: user.id, interview_date: interviewDate })
-  }
-  setSavedDate(interviewDate)
-}
+      .single()
 
-const getDaysLeft = () => {
-  if (!savedDate) return null
-  const diff = new Date(savedDate) - new Date()
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
-}
+    if (existing) {
+      await supabase
+        .from('user_settings')
+        .update({ interview_date: interviewDate })
+        .eq('user_id', user.id)
+    } else {
+      await supabase
+        .from('user_settings')
+        .insert({ user_id: user.id, interview_date: interviewDate })
+    }
+    setSavedDate(interviewDate)
+  }
+
+  const getDaysLeft = () => {
+    if (!savedDate) return null
+    const diff = new Date(savedDate) - new Date()
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
+  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -117,7 +132,6 @@ const getDaysLeft = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Navbar */}
       <nav className="flex items-center justify-between px-8 py-6 border-b border-zinc-800">
         <div className="flex items-center gap-2">
           <Brain className="w-6 h-6 text-violet-400" />
@@ -137,13 +151,11 @@ const getDaysLeft = () => {
 
       <div className="max-w-5xl mx-auto px-8 py-12">
 
-        {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
           <p className="text-zinc-400">Track your code understanding over time</p>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <TrendingUp className="w-6 h-6 text-violet-400 mb-3" />
@@ -163,59 +175,58 @@ const getDaysLeft = () => {
             <div className="text-zinc-400 text-sm">Repos reviewed</div>
           </div>
         </div>
-        {/* Due Reviews */}
-  {dueReviews.length > 0 && (
-    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-5 mb-6 flex items-center justify-between">
-      <div>
-        <p className="font-semibold text-yellow-300 mb-1">⏰ {dueReviews.length} topic{dueReviews.length > 1 ? 's' : ''} due for review</p>
-        <p className="text-zinc-400 text-sm">Start a new interview and Retrace will re-test these automatically.</p>
-      </div>
-    </div>
-  )}
-        {/* Daily Brief / Countdown */}
-<div className="bg-gradient-to-br from-violet-600/20 to-zinc-900 border border-violet-500/30 rounded-xl p-6 mb-10">
-  <h2 className="text-lg font-semibold mb-4">📅 Interview Countdown</h2>
-  {savedDate ? (
-    <div>
-      <div className="flex items-center gap-4 mb-4">
-        <div className="text-5xl font-bold text-violet-400">{getDaysLeft()}</div>
-        <div>
-          <p className="text-zinc-300">days left until your interview</p>
-          <p className="text-zinc-500 text-sm">{new Date(savedDate).toLocaleDateString()}</p>
-        </div>
-      </div>
-      {weaknesses.length > 0 && (
-        <div className="bg-black/30 rounded-lg p-4">
-          <p className="text-zinc-400 text-sm mb-2">🎯 Today's focus area:</p>
-          <p className="text-zinc-200 text-sm">{weaknesses[0]?.topic}</p>
-        </div>
-      )}
-      <button
-        onClick={() => setSavedDate(null)}
-        className="text-zinc-500 hover:text-zinc-300 text-xs mt-3"
-      >
-        Change date
-      </button>
-    </div>
-  ) : (
-    <div className="flex gap-3">
-      <input
-        type="date"
-        value={interviewDate}
-        onChange={(e) => setInterviewDate(e.target.value)}
-        className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-violet-500"
-      />
-      <button
-        onClick={saveInterviewDate}
-        className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-6 py-3 font-semibold"
-      >
-        Set Date
-      </button>
-    </div>
-  )}
-</div>
 
-        {/* New Interview */}
+        {dueReviews.length > 0 && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-5 mb-6 flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-yellow-300 mb-1">⏰ {dueReviews.length} topic{dueReviews.length > 1 ? 's' : ''} due for review</p>
+              <p className="text-zinc-400 text-sm">Start a new interview and Retrace will re-test these automatically.</p>
+            </div>
+          </div>
+        )}
+
+        <div className="bg-gradient-to-br from-violet-600/20 to-zinc-900 border border-violet-500/30 rounded-xl p-6 mb-10">
+          <h2 className="text-lg font-semibold mb-4">📅 Interview Countdown</h2>
+          {savedDate ? (
+            <div>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="text-5xl font-bold text-violet-400">{getDaysLeft()}</div>
+                <div>
+                  <p className="text-zinc-300">days left until your interview</p>
+                  <p className="text-zinc-500 text-sm">{new Date(savedDate).toLocaleDateString()}</p>
+                </div>
+              </div>
+              {weaknesses.length > 0 && (
+                <div className="bg-black/30 rounded-lg p-4">
+                  <p className="text-zinc-400 text-sm mb-2">🎯 Today's focus area:</p>
+                  <p className="text-zinc-200 text-sm">{weaknesses[0]?.topic}</p>
+                </div>
+              )}
+              <button
+                onClick={() => setSavedDate(null)}
+                className="text-zinc-500 hover:text-zinc-300 text-xs mt-3"
+              >
+                Change date
+              </button>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <input
+                type="date"
+                value={interviewDate}
+                onChange={(e) => setInterviewDate(e.target.value)}
+                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-violet-500"
+              />
+              <button
+                onClick={saveInterviewDate}
+                className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-6 py-3 font-semibold"
+              >
+                Set Date
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-10">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Plus className="w-5 h-5 text-violet-400" />
@@ -239,7 +250,6 @@ const getDaysLeft = () => {
           </div>
         </div>
 
-        {/* Weakness Map */}
         {weaknesses.length > 0 && (
           <div className="mb-10">
             <h2 className="text-lg font-semibold mb-4">🧠 Weakness Map</h2>
@@ -267,7 +277,6 @@ const getDaysLeft = () => {
           </div>
         )}
 
-        {/* Session History */}
         <div>
           <h2 className="text-lg font-semibold mb-4">Session History</h2>
           {loading ? (
@@ -298,9 +307,22 @@ const getDaysLeft = () => {
                   </div>
                 </div>
               ))}
+              {hasMoreSessions && (
+                <button
+                  onClick={() => {
+                    const nextPage = sessionPage + 1
+                    setSessionPage(nextPage)
+                    fetchSessions(user.id, nextPage)
+                  }}
+                  className="w-full mt-3 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-colors rounded-xl py-3 text-zinc-400 text-sm"
+                >
+                  Load more sessions
+                </button>
+              )}
             </div>
           )}
         </div>
+
       </div>
     </div>
   )
