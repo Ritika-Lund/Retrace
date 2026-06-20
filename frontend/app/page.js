@@ -144,9 +144,10 @@ export default function Home() {
       </section>
 
       {/* Footer */}
+      {/* Footer */}
       <footer className="border-t border-zinc-800 px-8 py-8 text-center text-zinc-600 text-sm">
-        Retrace — Open source. Free forever.
-      </footer>
+  <p>Built by <a href="https://www.linkedin.com/in/ritika-lund" target="_blank" rel="noopener noreferrer" className="text-zinc-400 hover:text-violet-400 transition-colors">Ritika Lund</a></p>
+</footer>
     </main>
   )
 }
