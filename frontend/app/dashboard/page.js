@@ -200,6 +200,7 @@ export default function Dashboard() {
                 <div className="bg-black/30 rounded-lg p-4">
                   <p className="text-zinc-400 text-sm mb-2">🎯 Today's focus area:</p>
                   <p className="text-zinc-200 text-sm">{weaknesses[0]?.topic}</p>
+                  <p className="text-zinc-600 text-xs mt-1">{weaknesses[0]?.repo_url?.replace('https://github.com/', '')}</p>
                 </div>
               )}
               <button
@@ -263,6 +264,7 @@ export default function Dashboard() {
                     </div>
                     <div className="flex-1">
                       <p className="text-zinc-300 text-sm mb-1">{w.topic}</p>
+                      <p className="text-zinc-600 text-xs mb-1">{w.repo_url?.replace('https://github.com/', '')}</p>
                       <div className="w-full bg-zinc-800 rounded-full h-1.5">
                         <div
                           className="bg-red-500 h-1.5 rounded-full"
