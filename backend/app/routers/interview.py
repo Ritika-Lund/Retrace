@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from app.services.repo_parser import parse_repo
 from app.services.ai_interviewer import generate_interview_question, evaluate_answer
+from app.limiter import limiter
 import time
 
 REPO_CACHE = {}
@@ -34,15 +35,16 @@ class EvaluateRequest(BaseModel):
     existing_topics: list[str] = []
 
 @router.post("/start")
-async def start_interview(request: StartInterviewRequest):
+@limiter.limit("10/minute")
+async def start_interview(request: Request, body: StartInterviewRequest):
     try:
-        repo_data = get_cached_repo_data(request.repo_url)
-        print("DUE TOPICS RECEIVED:", request.due_topics)
+        repo_data = get_cached_repo_data(body.repo_url)
+        print("DUE TOPICS RECEIVED:", body.due_topics)
         question = await generate_interview_question(
             repo_data=repo_data,
             conversation_history=[],
-            company_mode=request.company_mode,
-            due_topics=request.due_topics
+            company_mode=body.company_mode,
+            due_topics=body.due_topics
         )
         return {
             "question": question,
@@ -58,25 +60,28 @@ async def start_interview(request: StartInterviewRequest):
         raise HTTPException(status_code=500, detail="Something went wrong while reading this repository. Please try again.")
 
 @router.post("/continue")
-async def continue_interview(request: ContinueInterviewRequest):
+@limiter.limit("20/minute")
+async def continue_interview(request: Request, body: ContinueInterviewRequest):
     try:
-        repo_data = get_cached_repo_data(request.repo_url)
+        repo_data = get_cached_repo_data(body.repo_url)
         question = await generate_interview_question(
             repo_data=repo_data,
-            conversation_history=request.conversation_history,
-            company_mode=request.company_mode
+            conversation_history=body.conversation_history,
+            company_mode=body.company_mode
         )
         return {"question": question}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 @router.post("/evaluate")
-async def evaluate(request: EvaluateRequest):
+@limiter.limit("30/minute")
+async def evaluate(request: Request, body: EvaluateRequest):
     try:
         result = await evaluate_answer(
-            question=request.question,
-            answer=request.answer,
+            question=body.question,
+            answer=body.answer,
             repo_data={},
-            existing_topics=request.existing_topics
+            existing_topics=body.existing_topics
         )
         return result
     except Exception as e:
