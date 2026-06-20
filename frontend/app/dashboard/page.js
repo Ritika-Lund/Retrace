@@ -16,6 +16,9 @@ export default function Dashboard() {
   const [dueReviews, setDueReviews] = useState([])
   const [sessionPage, setSessionPage] = useState(0)
   const [hasMoreSessions, setHasMoreSessions] = useState(true)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [feedbackText, setFeedbackText] = useState('')
+  const [feedbackSent, setFeedbackSent] = useState(false)
 
   const SESSIONS_PER_PAGE = 5
 
@@ -120,6 +123,20 @@ export default function Dashboard() {
     router.push('/')
   }
 
+  const submitFeedback = async () => {
+    if (!feedbackText.trim() || !user) return
+    await supabase.from('feedback').insert({
+      user_id: user.id,
+      message: feedbackText.trim()
+    })
+    setFeedbackText('')
+    setFeedbackSent(true)
+    setTimeout(() => {
+      setShowFeedback(false)
+      setFeedbackSent(false)
+    }, 1500)
+  }
+
   const handleStart = () => {
     if (repoUrl.trim()) {
       router.push(`/session?repo=${encodeURIComponent(repoUrl)}`)
@@ -138,6 +155,12 @@ export default function Dashboard() {
           <span className="text-xl font-bold">Retrace</span>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="text-zinc-400 hover:text-white transition-colors text-sm"
+          >
+            Feedback
+          </button>
           <span className="text-zinc-400 text-sm">{user?.email}</span>
           <button
             onClick={handleSignOut}
@@ -326,6 +349,41 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {showFeedback && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-3">Send Feedback</h3>
+            {feedbackSent ? (
+              <p className="text-green-400 text-sm">Thanks! Your feedback was sent.</p>
+            ) : (
+              <>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="How can we make Retrace better for you?"
+                  rows={4}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 mb-4"
+                />
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => setShowFeedback(false)}
+                    className="text-zinc-400 hover:text-white text-sm px-4 py-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitFeedback}
+                    className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-4 py-2 text-sm font-semibold"
+                  >
+                    Submit
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
