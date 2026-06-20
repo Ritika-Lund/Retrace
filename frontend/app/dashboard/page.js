@@ -137,6 +137,13 @@ export default function Dashboard() {
     }, 1500)
   }
 
+  const deleteSession = async (sessionId) => {
+  const confirmed = window.confirm('Delete this session? This cannot be undone.')
+  if (!confirmed) return
+  await supabase.from('sessions').delete().eq('id', sessionId)
+  setSessions(prev => prev.filter(s => s.id !== sessionId))
+}
+
   const handleStart = () => {
     if (repoUrl.trim()) {
       router.push(`/session?repo=${encodeURIComponent(repoUrl)}`)
@@ -315,23 +322,32 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {sessions.map((session) => (
-                <div key={session.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium mb-1">
-                      {session.repo_url.replace('https://github.com/', '')}
-                    </p>
-                    <p className="text-zinc-500 text-sm">
-                      {new Date(session.created_at).toLocaleDateString()} · {session.company_mode} · {session.total} questions
-                    </p>
-                  </div>
-                  <div className={`text-2xl font-bold ${
-                    session.percentage >= 70 ? 'text-green-400' :
-                    session.percentage >= 40 ? 'text-yellow-400' : 'text-red-400'
-                  }`}>
-                    {session.percentage}%
-                  </div>
-                </div>
-              ))}
+      <div key={session.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-center justify-between">
+        <div>
+          <p className="font-medium mb-1">
+            {session.repo_url.replace('https://github.com/', '')}
+          </p>
+          <p className="text-zinc-500 text-sm">
+            {new Date(session.created_at).toLocaleDateString()} · {session.company_mode} · {session.total} questions
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className={`text-2xl font-bold ${
+            session.percentage >= 70 ? 'text-green-400' :
+            session.percentage >= 40 ? 'text-yellow-400' : 'text-red-400'
+          }`}>
+            {session.percentage}%
+          </div>
+          <button
+            onClick={() => deleteSession(session.id)}
+            className="text-zinc-600 hover:text-red-400 transition-colors text-sm px-2"
+            title="Delete session"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    ))}
               {hasMoreSessions && (
                 <button
                   onClick={() => {
