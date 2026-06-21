@@ -71,7 +71,8 @@ async def continue_interview(request: Request, body: ContinueInterviewRequest):
         )
         return {"question": question}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print("CONTINUE INTERVIEW ERROR:", str(e))
+        raise HTTPException(status_code=500, detail="Something went wrong while generating the next question. Please try again.")
 
 @router.post("/evaluate")
 @limiter.limit("30/minute")
@@ -85,4 +86,5 @@ async def evaluate(request: Request, body: EvaluateRequest):
         )
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print("EVALUATE ENDPOINT ERROR:", str(e))
+        raise HTTPException(status_code=500, detail="Something went wrong while evaluating your answer. Please try again.")
