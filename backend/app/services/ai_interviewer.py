@@ -172,23 +172,25 @@ IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with b
         text = result["choices"][0]["message"]["content"]
         print("EVALUATE RAW RESPONSE:", text)
 
+        return parse_evaluation_response(text, existing_topics)
+def parse_evaluation_response(text: str, existing_topics: list = None) -> dict:
+    import json
+
+    def apply_topic_index(parsed):
+        if existing_topics and parsed.get("topic_index", -1) != -1:
+            idx = parsed["topic_index"]
+            if isinstance(idx, int) and 0 <= idx < len(existing_topics):
+                parsed["topic"] = existing_topics[idx]
+        return parsed
+
+    try:
+        clean = text.replace("```json", "").replace("```", "").strip()
+        parsed = json.loads(clean)
+        return apply_topic_index(parsed)
+    except Exception:
         try:
-            import json
-            clean = text.replace("```json", "").replace("```", "").strip()
-            parsed = json.loads(clean)
-            if existing_topics and parsed.get("topic_index", -1) != -1:
-                idx = parsed["topic_index"]
-                if isinstance(idx, int) and 0 <= idx < len(existing_topics):
-                    parsed["topic"] = existing_topics[idx]
-            return parsed
-        except Exception as e:
-            try:
-                fixed = clean.replace("\\", "/")
-                parsed = json.loads(fixed)
-                if existing_topics and parsed.get("topic_index", -1) != -1:
-                    idx = parsed["topic_index"]
-                    if isinstance(idx, int) and 0 <= idx < len(existing_topics):
-                        parsed["topic"] = existing_topics[idx]
-                return parsed
-            except Exception:
-                return {"score": 0, "feedback": "Could not evaluate answer", "confident": False, "explanation": None, "topic": "Unclear answer (parsing error)"}
+            fixed = clean.replace("\\", "/")
+            parsed = json.loads(fixed)
+            return apply_topic_index(parsed)
+        except Exception:
+            return {"score": 0, "feedback": "Could not evaluate answer", "confident": False, "explanation": None, "topic": "Unclear answer (parsing error)"}
