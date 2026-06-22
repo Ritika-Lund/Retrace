@@ -6,11 +6,31 @@ from app.services.ai_interviewer import parse_evaluation_response
 
 
 def test_parses_clean_json():
-    text = '{"score": 1, "feedback": "Good job", "confident": true, "explanation": null, "topic": "Database design", "topic_index": -1}'
+    text = '{"score": 2, "feedback": "Good job", "explanation": null, "topic": "Database design", "topic_index": -1}'
     result = parse_evaluation_response(text)
-    assert result["score"] == 1
+    assert result["score"] == 2
     assert result["confident"] is True
     assert result["topic"] == "Database design"
+    
+def test_score_below_threshold_gives_not_confident():
+    text = '{"score": 1, "feedback": "Vague", "explanation": "Needs more detail", "topic": "Database design", "topic_index": -1}'
+    result = parse_evaluation_response(text)
+    assert result["score"] == 1
+    assert result["confident"] is False
+
+
+def test_score_zero_gives_not_confident():
+    text = '{"score": 0, "feedback": "Wrong", "explanation": "Needs more detail", "topic": "Database design", "topic_index": -1}'
+    result = parse_evaluation_response(text)
+    assert result["score"] == 0
+    assert result["confident"] is False
+
+
+def test_score_three_gives_confident():
+    text = '{"score": 3, "feedback": "Excellent", "explanation": null, "topic": "Database design", "topic_index": -1}'
+    result = parse_evaluation_response(text)
+    assert result["score"] == 3
+    assert result["confident"] is True
 
 
 def test_strips_markdown_code_fences():

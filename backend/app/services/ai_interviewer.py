@@ -128,19 +128,21 @@ Given a question about a codebase and the candidate's answer, evaluate how well 
 
 Respond ONLY with a JSON object like this:
 {
-  "score": 1,
+  "score": 2,
   "feedback": "Brief feedback here",
-  "confident": true,
   "explanation": null,
   "topic": "Short topic label here",
   "topic_index": -1
 }
 
 Where:
-- score is 0 (poor) or 1 (good)
+-- score is an integer from 0 to 3. Use ALL four values:
+    0 = no real understanding shown. Example: "I'm not sure, I think it just works fine" or "I don't remember the details"
+    1 = mentions the right concept but can't explain WHY or HOW. Example: knows null checks matter but can't explain when or what exception to throw
+    2 = correct explanation with one clear gap — missing a specific detail, edge case, or trade-off a senior engineer would expect
+    3 = complete, specific answer — explains the what, why, AND trade-offs with no significant gaps
 - feedback is 1-2 sentences of honest, direct feedback on their answer
-- confident is true if they clearly understood, false if they were vague, wrong, or evasive
-- explanation: IF confident is false, write a short 2-3 sentence explanation of what a strong answer would have covered, in a mentor tone, helping them understand the concept for next time. If confident is true, set explanation to null.
+- explanation: IF score is 0 or 1, write a short 2-3 sentence explanation of what a strong answer would have covered, in a mentor tone, helping them understand the concept for next time. If score is 2 or 3, set explanation to null.
 - topic: a SHORT (3-8 word) clean label summarizing what technical concept this question was actually about, written as a noun phrase, e.g. "Choice of Next.js for frontend", "Layered architecture in ScheduleService", "Client-side routing with useRouter". This must NOT be a sentence or a copy of the question wording — it is a concise topic tag.
 
 Keep the tone direct but constructive — like a senior engineer who wants the candidate to actually learn, not just feel bad.
@@ -186,11 +188,15 @@ def parse_evaluation_response(text: str, existing_topics: list = None) -> dict:
     try:
         clean = text.replace("```json", "").replace("```", "").strip()
         parsed = json.loads(clean)
-        return apply_topic_index(parsed)
+        parsed = apply_topic_index(parsed)
+        parsed["confident"] = parsed.get("score", 0) >= 2
+        return parsed
     except Exception:
         try:
             fixed = clean.replace("\\", "/")
             parsed = json.loads(fixed)
-            return apply_topic_index(parsed)
+            parsed = apply_topic_index(parsed)
+            parsed["confident"] = parsed.get("score", 0) >= 2
+            return parsed
         except Exception:
             return {"score": 0, "feedback": "Could not evaluate answer", "confident": False, "explanation": None, "topic": "Unclear answer (parsing error)"}
