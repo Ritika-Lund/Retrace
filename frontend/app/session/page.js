@@ -128,6 +128,7 @@ export default function SessionPage() {
           answer: userMessages[i]?.content || '',
           feedback: data.feedback,
           confident: data.confident,
+          score:data.score,
           explanation: data.explanation,
           topic: data.topic || (assistantMessages[i]?.content || '').slice(0, 60)
 

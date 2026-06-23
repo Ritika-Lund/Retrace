@@ -67,3 +67,8 @@ def test_new_weakness_schedules_one_day_out():
     result = compute_new_weakness(now=FIXED_NOW)
     next_review = datetime.fromisoformat(result["next_review_at"])
     assert (next_review - FIXED_NOW).days == 1
+    
+def test_advance_already_resolved_stays_resolved():
+    result = compute_advance(current_stage=4, now=FIXED_NOW)
+    assert result["resolved"] is True
+    assert result["review_stage"] <= 4

@@ -7,7 +7,7 @@ def compute_advance(current_stage: int, now: datetime = None) -> dict:
     """Called when a user answers confidently on an existing weakness."""
     if now is None:
         now = datetime.utcnow()
-    new_stage = current_stage + 1
+    new_stage = min(current_stage + 1, len(STAGE_DAYS))
     is_resolved = new_stage >= len(STAGE_DAYS)
     interval = STAGE_DAYS[new_stage] if new_stage < len(STAGE_DAYS) else 14
     next_review = now + timedelta(days=interval)
