@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, Field
+from typing import Literal
 from app.services.repo_parser import parse_repo
 from app.services.ai_interviewer import generate_interview_question, evaluate_answer
 from app.limiter import limiter
@@ -22,26 +23,51 @@ def get_cached_repo_data(repo_url: str) -> dict:
 router = APIRouter(prefix="/interview", tags=["interview"])
 
 class StartInterviewRequest(BaseModel):
-    repo_url: str
-    company_mode: str = "generic"
-    due_topics: list[str] = []
+    repo_url: str = Field(..., max_length=200)
+    company_mode: Literal["generic", "meta", "google", "startup"] = "generic"
+    due_topics: list[str] = Field(default=[], max_length=10)
+
+    @field_validator("repo_url")
+    @classmethod
+    def repo_url_must_be_github(cls, v):
+        if not v.startswith("https://github.com/"):
+            raise ValueError("Repository URL must start with https://github.com/")
+        return v
+
 
 class ContinueInterviewRequest(BaseModel):
-    repo_url: str
-    conversation_history: list
-    company_mode: str = "generic"
+    repo_url: str = Field(..., max_length=200)
+    conversation_history: list = Field(..., max_length=50)
+    company_mode: Literal["generic", "meta", "google", "startup"] = "generic"
+
+    @field_validator("repo_url")
+    @classmethod
+    def repo_url_must_be_github(cls, v):
+        if not v.startswith("https://github.com/"):
+            raise ValueError("Repository URL must start with https://github.com/")
+        return v
+
 
 class EvaluateRequest(BaseModel):
-    question: str
-    answer: str
-    repo_url: str
-    existing_topics: list[str] = []
+    question: str = Field(..., max_length=5000)
+    answer: str = Field(..., max_length=5000)
+    repo_url: str = Field(..., max_length=200)
+    existing_topics: list[str] = Field(default=[], max_length=20)
+
+
 class SaveSessionRequest(BaseModel):
-    access_token: str
-    repo_url: str
-    score: int
-    total: int
-    feedback: list
+    access_token: str = Field(..., max_length=2000)
+    repo_url: str = Field(..., max_length=200)
+    score: int = Field(..., ge=0)
+    total: int = Field(..., ge=0)
+    feedback: list = Field(..., max_length=20)
+
+    @field_validator("repo_url")
+    @classmethod
+    def repo_url_must_be_github(cls, v):
+        if not v.startswith("https://github.com/"):
+            raise ValueError("Repository URL must start with https://github.com/")
+        return v
 
 @router.post("/start")
 @limiter.limit("10/minute")
