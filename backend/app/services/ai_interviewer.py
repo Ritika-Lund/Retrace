@@ -1,6 +1,9 @@
 import os
 import httpx
 from dotenv import load_dotenv
+from app.logger import get_logger
+
+logger = get_logger("ai_interviewer")
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -104,7 +107,7 @@ Start with an opening question about their most significant architectural decisi
         )
 
         result = response.json()
-        print("GROQ RESPONSE:", result)
+        logger.info("Question generated successfully")
         return result["choices"][0]["message"]["content"]
 
 async def evaluate_answer(
@@ -172,9 +175,10 @@ IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with b
 
         result = response.json()
         text = result["choices"][0]["message"]["content"]
-        print("EVALUATE RAW RESPONSE:", text)
-
-        return parse_evaluation_response(text, existing_topics)
+        parsed = parse_evaluation_response(text, existing_topics)
+        logger.info("Evaluation complete: score=%s confident=%s topic=%s",
+            parsed.get("score"), parsed.get("confident"), parsed.get("topic"))
+        return parsed
 def parse_evaluation_response(text: str, existing_topics: list = None) -> dict:
     import json
 

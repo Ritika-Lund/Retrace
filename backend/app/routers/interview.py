@@ -8,7 +8,10 @@ import time
 from app.services.supabase_client import supabase_admin, get_verified_user_id
 from datetime import datetime, timedelta
 from app.services.weakness_logic import compute_advance, compute_reset, compute_new_weakness
+from app.logger import get_logger
 
+
+logger = get_logger("interview")
 REPO_CACHE = {}
 CACHE_TTL_SECONDS = 600  # 10 minutes
 
@@ -74,7 +77,7 @@ class SaveSessionRequest(BaseModel):
 async def start_interview(request: Request, body: StartInterviewRequest):
     try:
         repo_data = get_cached_repo_data(body.repo_url)
-        print("DUE TOPICS RECEIVED:", body.due_topics)
+        logger.info("Starting interview: repo=%s due_topics=%s", body.repo_url, len(body.due_topics))
         question = await generate_interview_question(
             repo_data=repo_data,
             conversation_history=[],
@@ -106,7 +109,7 @@ async def continue_interview(request: Request, body: ContinueInterviewRequest):
         )
         return {"question": question}
     except Exception as e:
-        print("CONTINUE INTERVIEW ERROR:", str(e))
+        logger.error("Continue interview failed: %s", str(e))
         raise HTTPException(status_code=500, detail="Something went wrong while generating the next question. Please try again.")
 
 @router.post("/evaluate")
@@ -121,7 +124,7 @@ async def evaluate(request: Request, body: EvaluateRequest):
         )
         return result
     except Exception as e:
-        print("EVALUATE ENDPOINT ERROR:", str(e))
+        logger.error("Evaluate endpoint failed: %s", str(e))
         raise HTTPException(status_code=500, detail="Something went wrong while evaluating your answer. Please try again.")
 @router.post("/save-session")
 @limiter.limit("10/minute")
