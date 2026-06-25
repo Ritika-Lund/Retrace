@@ -1,4 +1,5 @@
 import os
+import asyncio
 import httpx
 from dotenv import load_dotenv
 from app.logger import get_logger
@@ -28,6 +29,46 @@ def build_codebase_summary(repo_data: dict) -> str:
         summary += content[:500] + "...\n" if len(content) > 500 else content + "\n"
 
     return summary
+async def call_groq_with_retry(client: httpx.AsyncClient, payload: dict, max_retries: int = 2) -> dict:
+    """Call Groq API with automatic retry on temporary failures."""
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            response = await client.post(
+                GROQ_URL,
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json=payload,
+                timeout=30.0
+            )
+            if response.status_code == 429:
+                wait = 3 * (attempt + 1)
+                logger.warning("Groq rate limit hit, waiting %ss before retry %s/%s", wait, attempt + 1, max_retries)
+                await asyncio.sleep(wait)
+                last_error = "rate_limit"
+                continue
+            if response.status_code >= 500:
+                wait = 2 * (attempt + 1)
+                logger.warning("Groq server error %s, waiting %ss before retry %s/%s", response.status_code, wait, attempt + 1, max_retries)
+                await asyncio.sleep(wait)
+                last_error = "server_error"
+                continue
+            return response.json()
+        except httpx.TimeoutException:
+            wait = 2 * (attempt + 1)
+            logger.warning("Groq timeout, waiting %ss before retry %s/%s", wait, attempt + 1, max_retries)
+            await asyncio.sleep(wait)
+            last_error = "timeout"
+            continue
+
+    if last_error == "rate_limit":
+        raise ValueError("Retrace is temporarily at capacity. Please try again in a few moments.")
+    elif last_error == "timeout":
+        raise ValueError("The AI service is taking too long to respond. Please try again.")
+    else:
+        raise ValueError("The AI service is currently unavailable. Please try again shortly.")
 
 async def generate_interview_question(
     repo_data: dict,
@@ -91,22 +132,12 @@ Start with an opening question about their most significant architectural decisi
         })
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(
-            GROQ_URL,
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "llama-3.3-70b-versatile",
-                "messages": messages,
-                "temperature": 0.8,
-                "max_tokens": 500
-            },
-            timeout=30.0
-        )
-
-        result = response.json()
+        result = await call_groq_with_retry(client, {
+            "model": "llama-3.3-70b-versatile",
+            "messages": messages,
+            "temperature": 0.8,
+            "max_tokens": 500
+        })
         logger.info("Question generated successfully")
         return result["choices"][0]["message"]["content"]
 
@@ -158,27 +189,18 @@ IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with b
     ]
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(
-            GROQ_URL,
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "llama-3.3-70b-versatile",
-                "messages": messages,
-                "temperature": 0.3,
-                "max_tokens": 300
-            },
-            timeout=30.0
-        )
-
-        result = response.json()
+        result = await call_groq_with_retry(client, {
+            "model": "llama-3.3-70b-versatile",
+            "messages": messages,
+            "temperature": 0.3,
+            "max_tokens": 300
+        })
         text = result["choices"][0]["message"]["content"]
         parsed = parse_evaluation_response(text, existing_topics)
         logger.info("Evaluation complete: score=%s confident=%s topic=%s",
             parsed.get("score"), parsed.get("confident"), parsed.get("topic"))
         return parsed
+    
 def parse_evaluation_response(text: str, existing_topics: list = None) -> dict:
     import json
 
