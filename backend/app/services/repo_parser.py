@@ -16,19 +16,33 @@ def clone_repo(repo_url: str) -> str:
     if not repo_url.startswith("https://github.com/"):
         raise ValueError("Please provide a valid GitHub repository URL (must start with https://github.com/)")
     
+    import subprocess
     temp_dir = tempfile.mkdtemp()
+    
+    process = subprocess.Popen(
+        ["git", "clone", "--depth=1", "--filter=blob:none", repo_url, temp_dir],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
+    )
     try:
-        git.Repo.clone_from(repo_url, temp_dir, depth=50)
-    except git.exc.GitCommandError as e:
-        error_str = str(e).lower()
+        stdout, stderr = process.communicate(timeout=30)
+    except subprocess.TimeoutExpired:
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(process.pid)], 
+                      capture_output=True) if os.name == 'nt' else process.kill()
+        process.communicate()
+        raise ValueError("This repository is taking too long to load. Try a smaller repository.")
+    
+    if process.returncode != 0:
+        error_str = stderr.lower()
         if "not found" in error_str or "repository not found" in error_str:
             raise ValueError("Repository not found. Check the URL or make sure the repo is public.")
         elif "could not read username" in error_str or "authentication" in error_str:
             raise ValueError("This appears to be a private repository. Retrace only works with public repos right now.")
-        elif "timeout" in error_str or "could not resolve" in error_str:
-            raise ValueError("Could not reach GitHub. Please check the URL and try again.")
         else:
             raise ValueError("Could not clone this repository. Please check the URL and try again.")
+    
     return temp_dir
 
 def parse_repo(repo_url: str) -> dict:
