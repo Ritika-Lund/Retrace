@@ -1,4 +1,5 @@
 import "./globals.css";
+import {Analytics} from "@Vercel/analytics/react";
 
 export const metadata = {
   title: "Retrace — Defend your code",
@@ -10,6 +11,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className="h-full">
       <body className="min-h-full flex flex-col bg-black text-white">
         {children}
+        <Analytics />
       </body>
     </html>
   );

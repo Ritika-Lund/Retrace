@@ -42,7 +42,7 @@ def clone_repo(repo_url: str) -> str:
             raise ValueError("This appears to be a private repository. Retrace only works with public repos right now.")
         else:
             raise ValueError("Could not clone this repository. Please check the URL and try again.")
-    
+        
     return temp_dir
 
 def parse_repo(repo_url: str) -> dict:
