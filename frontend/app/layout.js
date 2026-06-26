@@ -1,5 +1,5 @@
 import "./globals.css";
-import {Analytics} from "@Vercel/analytics/react";
+import {Analytics} from "@Vercel/analytics";
 
 export const metadata = {
   title: "Retrace — Defend your code",
