@@ -1,10 +1,10 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Brain, ArrowLeft } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export default function SessionReviewPage() {
+function SessionReviewContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('id')
@@ -143,5 +143,17 @@ export default function SessionReviewPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SessionReviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-zinc-400">Loading session...</p>
+      </div>
+    }>
+      <SessionReviewContent />
+    </Suspense>
   )
 }
