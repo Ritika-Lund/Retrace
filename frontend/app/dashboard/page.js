@@ -322,7 +322,11 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {sessions.map((session) => (
-      <div key={session.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-center justify-between">
+      <div
+  key={session.id}
+  onClick={() => router.push(`/session-review?id=${session.id}`)}
+  className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-center justify-between cursor-pointer hover:border-zinc-600 transition-colors"
+>
         <div>
           <p className="font-medium mb-1">
             {session.repo_url.replace('https://github.com/', '')}
