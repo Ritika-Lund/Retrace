@@ -12,6 +12,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSent, setResetSent] = useState(false)
 
   const handleAuth = async () => {
     setLoading(true)
@@ -33,6 +36,21 @@ export default function LoginPage() {
     }
     setLoading(false)
   }
+  const handleForgotPassword = async () => {
+  if (!resetEmail.trim()) return
+  setLoading(true)
+  setError('')
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`
+    })
+    if (error) throw error
+    setResetSent(true)
+  } catch (err) {
+    setError(err.message)
+  }
+  setLoading(false)
+}
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4">
@@ -82,7 +100,7 @@ export default function LoginPage() {
           </div>
 
           {/* Password */}
-          <div className="mb-6">
+          <div className="mb-2">
             <label className="text-zinc-400 text-sm mb-2 block">Password</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-zinc-500 absolute left-3 top-3.5" />
@@ -96,7 +114,16 @@ export default function LoginPage() {
               />
             </div>
           </div>
-
+          {!isSignUp && (
+            <div className="flex justify-end mb-6">
+              <button
+                onClick={() => setShowForgotPassword(true)}
+                className="text-zinc-500 hover:text-violet-400 text-xs transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
           {/* Button */}
           <button
             onClick={handleAuth}
@@ -109,7 +136,7 @@ export default function LoginPage() {
 
           {/* Toggle */}
           <p className="text-center text-zinc-400 text-sm mt-6">
-            {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+            {isSignUp ? 'Already have an account?' : 'No account yet?'}
             <button
               onClick={() => setIsSignUp(!isSignUp)}
               className="text-violet-400 hover:text-violet-300 ml-1"
@@ -118,6 +145,42 @@ export default function LoginPage() {
             </button>
           </p>
         </div>
+        {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-3">Reset your password</h3>
+            {resetSent ? (
+              <p className="text-green-400 text-sm">Check your email for a password reset link.</p>
+            ) : (
+              <>
+                <p className="text-zinc-400 text-sm mb-4">Enter your email and we will send you a reset link.</p>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 mb-4"
+                />
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => setShowForgotPassword(false)}
+                    className="text-zinc-400 hover:text-white text-sm px-4 py-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleForgotPassword}
+                    disabled={loading || !resetEmail.trim()}
+                    className="bg-violet-600 hover:bg-violet-500 disabled:opacity-50 transition-colors rounded-lg px-4 py-2 text-sm font-semibold"
+                  >
+                    Send reset link
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
       </div>
     </div>
   )
