@@ -27,7 +27,6 @@ router = APIRouter(prefix="/interview", tags=["interview"])
 
 class StartInterviewRequest(BaseModel):
     repo_url: str = Field(..., max_length=200)
-    company_mode: Literal["generic", "meta", "google", "startup"] = "generic"
     due_topics: list[str] = Field(default=[], max_length=10)
 
     @field_validator("repo_url")
@@ -41,7 +40,6 @@ class StartInterviewRequest(BaseModel):
 class ContinueInterviewRequest(BaseModel):
     repo_url: str = Field(..., max_length=200)
     conversation_history: list = Field(..., max_length=50)
-    company_mode: Literal["generic", "meta", "google", "startup"] = "generic"
 
     @field_validator("repo_url")
     @classmethod
@@ -81,7 +79,6 @@ async def start_interview(request: Request, body: StartInterviewRequest):
         question = await generate_interview_question(
             repo_data=repo_data,
             conversation_history=[],
-            company_mode=body.company_mode,
             due_topics=body.due_topics
         )
         return {
@@ -105,7 +102,6 @@ async def continue_interview(request: Request, body: ContinueInterviewRequest):
         question = await generate_interview_question(
             repo_data=repo_data,
             conversation_history=body.conversation_history,
-            company_mode=body.company_mode
         )
         return {"question": question}
     except Exception as e:

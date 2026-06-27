@@ -73,20 +73,14 @@ async def call_groq_with_retry(client: httpx.AsyncClient, payload: dict, max_ret
 async def generate_interview_question(
     repo_data: dict,
     conversation_history: list,
-    company_mode: str = "generic",
     due_topics: list = None
 ) -> str:
 
     codebase_summary = build_codebase_summary(repo_data)
 
-    company_styles = {
-        "generic": "a senior software engineer conducting a technical interview",
-        "meta": "a Meta/Facebook senior engineer focusing on scale, performance, and system design",
-        "google": "a Google SWE interviewer focusing on code quality, algorithms, and architecture",
-        "startup": "a startup CTO who wants to understand every technical decision deeply"
-    }
+   
 
-    interviewer_style = company_styles.get(company_mode, company_styles["generic"])
+    interviewer_style = "a senior software engineer conducting a technical interview"
 
     due_topics_text = ""
     if due_topics:

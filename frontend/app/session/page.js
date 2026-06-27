@@ -16,7 +16,6 @@ export default function SessionPage() {
   const [starting, setStarting] = useState(true)
   const [ending, setEnding] = useState(false)
   const [repoSummary, setRepoSummary] = useState(null)
-  const [companyMode, setCompanyMode] = useState('generic')
   const [dueTopics, setDueTopics] = useState([])
 
   const startInterview = async (topics=[]) => {
@@ -27,7 +26,6 @@ export default function SessionPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           repo_url: repoUrl, 
-          company_mode: companyMode,
           due_topics: topics
         })
       })
@@ -80,7 +78,6 @@ export default function SessionPage() {
         body: JSON.stringify({
           repo_url: repoUrl,
           conversation_history: newMessages,
-          company_mode: companyMode
         })
       })
       const data = await res.json()
@@ -178,17 +175,6 @@ export default function SessionPage() {
             <StopCircle className="w-4 h-4 text-red-400" />
             {ending ? 'Evaluating...' : 'End Interview'}
           </button>
-
-          <select
-            value={companyMode}
-            onChange={(e) => setCompanyMode(e.target.value)}
-            className="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500"
-          >
-            <option value="generic">Generic Senior Engineer</option>
-            <option value="meta">Meta Interview</option>
-            <option value="google">Google Interview</option>
-            <option value="startup">Startup CTO</option>
-          </select>
         </div>
       </div>
 
