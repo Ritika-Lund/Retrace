@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [showFeedback, setShowFeedback] = useState(false)
   const [feedbackText, setFeedbackText] = useState('')
   const [feedbackSent, setFeedbackSent] = useState(false)
+  const [totalSessions, setTotalSessions] = useState(0)
 
   const SESSIONS_PER_PAGE = 5
 
@@ -55,6 +56,11 @@ export default function Dashboard() {
       }
       setHasMoreSessions((data || []).length === SESSIONS_PER_PAGE)
     }
+    const { count } = await supabase
+      .from('sessions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+    if (count !== null) setTotalSessions(count)
     setLoading(false)
   }
 
@@ -142,6 +148,7 @@ export default function Dashboard() {
   if (!confirmed) return
   await supabase.from('sessions').delete().eq('id', sessionId)
   setSessions(prev => prev.filter(s => s.id !== sessionId))
+  setTotalSessions(prev => prev - 1)
 }
 
   const handleStart = () => {
@@ -194,7 +201,7 @@ export default function Dashboard() {
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <Clock className="w-6 h-6 text-violet-400 mb-3" />
-            <div className="text-3xl font-bold mb-1">{sessions.length}</div>
+            <div className="text-3xl font-bold mb-1">{totalSessions}</div>
             <div className="text-zinc-400 text-sm">Sessions completed</div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
@@ -342,13 +349,16 @@ export default function Dashboard() {
           }`}>
             {session.percentage}%
           </div>
-          <button
-            onClick={() => deleteSession(session.id)}
-            className="text-zinc-600 hover:text-red-400 transition-colors text-sm px-2"
-            title="Delete session"
-          >
-            ✕
-          </button>
+                <button
+        onClick={(e) => {
+          e.stopPropagation()
+          deleteSession(session.id)
+        }}
+        className="text-zinc-600 hover:text-red-400 transition-colors text-sm px-2"
+        title="Delete session"
+      >
+        ✕
+      </button>
         </div>
       </div>
     ))}
