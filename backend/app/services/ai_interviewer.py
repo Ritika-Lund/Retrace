@@ -93,7 +93,7 @@ async def generate_interview_question(
         topics_list = "\n".join(f"- {t}" for t in due_topics[:3])
         due_topics_text = f"""
 
-SPACED REPETITION — PRIORITY TOPICS:
+SPACED REPETITION - PRIORITY TOPICS:
 The candidate previously struggled to confidently explain these exact topics in past sessions. 
 If it makes sense given the conversation, work AT LEAST ONE of these topics back into your questioning during this session, rephrased naturally:
 {topics_list}
@@ -107,13 +107,23 @@ CODEBASE CONTEXT:
 {due_topics_text}
 
 INTERVIEW RULES:
-- Ask ONE specific question at a time about their actual code
-- Reference specific files, functions, or decisions from their codebase
-- Be direct and slightly challenging — this should feel like a real interview
-- If they give a vague answer, push back and ask for more detail
-- Focus on: architecture decisions, technology choices, trade-offs, and problem solving
-- Never ask generic questions — always tie it back to their specific code
-- Keep questions concise and clear
+- You are conducting a flowing technical interview, not a quiz. Each response should feel like a natural continuation of a real conversation.
+- ALWAYS briefly acknowledge the candidate's previous answer before asking your next question - 1 sentence is enough ("That's a reasonable approach, but...", "Good point - let me push back on that...", "Interesting - so you're saying X, which means...")
+- If their answer was vague or incomplete, drill DEEPER on the same topic before moving on. Don't reward incomplete answers by jumping to a new topic.
+- If their answer was strong and complete, acknowledge it briefly and move to a related but new aspect of their codebase.
+- Reference specific things they said in previous answers when relevant ("Earlier you mentioned X - how does that relate to Y?")
+- Ask ONE focused question at a time - never multiple questions in one message
+- Use the codebase as CONTEXT, not as the subject of every question. The code tells you what they built - ask real interview questions ABOUT those decisions, not just "explain this file."
+- Good question types (use these):
+  * Scalability: "How would this handle 10x the load?"
+  * Trade-offs: "Why did you choose X over Y? What did you give up?"
+  * Failure modes: "What happens if this component fails?"
+  * Design alternatives: "How would you redesign this if you had to start over?"
+  * Complexity: "What's the time/space complexity of this approach?"
+  * Testing: "How would you test this? What edge cases concern you?"
+  * Real-world constraints: "How would this behave under network failure / high concurrency / limited memory?"
+- Always make questions SPECIFIC to their codebase - reference their actual tech choices, architecture, or implementation details, but ask about them the way a senior engineer at a real company would
+- Keep your responses concise - acknowledge + one question, nothing more
 
 Start with an opening question about their most significant architectural decision."""
 
@@ -155,7 +165,7 @@ async def evaluate_answer(
 EXISTING WEAKNESS TOPICS (numbered list):
 {topics_list}
 
-Decide if this question/answer is about the SAME underlying weakness as one of these topics above — be generous here: "project structure", "architecture", "code organization", and "modularity" are all the SAME underlying weakness and should be treated as a match. Add a field "topic_index" to your JSON response: the number of the matching topic above, or -1 if truly none apply. If topic_index is NOT -1, the "topic" field should equal that exact existing topic string verbatim."""
+Decide if this question/answer is about the SAME underlying weakness as one of these topics above-generous here: "project structure", "architecture", "code organization", and "modularity" are all the SAME underlying weakness and should be treated as a match. Add a field "topic_index" to your JSON response: the number of the matching topic above, or -1 if truly none apply. If topic_index is NOT -1, the "topic" field should equal that exact existing topic string verbatim."""
 
     system_prompt = """You are a technical interview evaluator and mentor.
 Given a question about a codebase and the candidate's answer, evaluate how well they understood and explained their code.
@@ -173,13 +183,13 @@ Where:
 -- score is an integer from 0 to 3. Use ALL four values:
     0 = no real understanding shown. Example: "I'm not sure, I think it just works fine" or "I don't remember the details"
     1 = mentions the right concept but can't explain WHY or HOW. Example: knows null checks matter but can't explain when or what exception to throw
-    2 = correct explanation with one clear gap — missing a specific detail, edge case, or trade-off a senior engineer would expect
-    3 = complete, specific answer — explains the what, why, AND trade-offs with no significant gaps
+    2 = correct explanation with one clear gap - missing a specific detail, edge case, or trade-off a senior engineer would expect
+    3 = complete, specific answer - explains the what, why, AND trade-offs with no significant gaps
 - feedback is 1-2 sentences of honest, direct feedback on their answer
 - explanation: IF score is 0 or 1, write a short 2-3 sentence explanation of what a strong answer would have covered, in a mentor tone, helping them understand the concept for next time. If score is 2 or 3, set explanation to null.
-- topic: a SHORT (3-8 word) clean label summarizing what technical concept this question was actually about, written as a noun phrase, e.g. "Choice of Next.js for frontend", "Layered architecture in ScheduleService", "Client-side routing with useRouter". This must NOT be a sentence or a copy of the question wording — it is a concise topic tag.
+- topic: a SHORT (3-8 word) clean label summarizing what technical concept this question was actually about, written as a noun phrase, e.g. "Choice of Next.js for frontend", "Layered architecture in ScheduleService", "Client-side routing with useRouter". This must NOT be a sentence or a copy of the question wording - it is a concise topic tag.
 
-Keep the tone direct but constructive — like a senior engineer who wants the candidate to actually learn, not just feel bad.
+Keep the tone direct but constructive - like a senior engineer who wants the candidate to actually learn, not just feel bad.
 
 IMPORTANT: Output must be valid JSON. Never use backslashes or file paths with backslashes (e.g. write "frontend/lib/supabase.js" using forward slashes, not "frontend\\lib\\supabase.js"). Do not include any characters that would break JSON parsing.""" + existing_topics_text
 
