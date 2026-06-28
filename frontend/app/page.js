@@ -43,16 +43,16 @@ export default function Home() {
           AI-powered technical interview simulator
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-          Can you explain
-          <br />
-          <span className="text-violet-400">your own code?</span>
-        </h1>
+              <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+        You built it.
+        <br />
+        <span className="text-violet-400">Can you explain it?</span>
+      </h1>
 
-        <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed">
-          Retrace reads your GitHub repositories and simulates a brutal, honest technical interview 
-          based on the code you actually wrote. No generic questions. Just your code, under pressure.
-        </p>
+          <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mb-12 leading-relaxed">
+    Retrace reads your GitHub repository and interviews you about the code you actually wrote. 
+    It finds exactly what you can not explain - and keeps testing you until you can.
+  </p>
 
         {/* Input */}
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-xl mb-6">
@@ -76,31 +76,32 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="px-8 py-24 border-t border-zinc-800">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <Target className="w-8 h-8 text-violet-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Your code, not LeetCode</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Every question is generated from your actual repository — your architecture, your decisions, your trade-offs.
-            </p>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <Brain className="w-8 h-8 text-violet-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Remembers everything</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Retrace tracks what you struggle to explain and resurfaces those concepts at exactly the right moment.
-            </p>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-            <Shield className="w-8 h-8 text-violet-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Company mode</h3>
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Switch interview style to match Meta, Google, startup CTO, or a generic senior engineer panel.
-            </p>
-          </div>
-        </div>
-      </section>
+      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+    <Target className="w-8 h-8 text-violet-400 mb-4" />
+    <h3 className="text-lg font-semibold mb-2">Your code. Real questions.</h3>
+    <p className="text-zinc-400 text-sm leading-relaxed">
+      Not LeetCode. Not generic prep. Every question comes from your actual architecture,
+      your actual decisions, your actual commits. If you built it, you should be able to explain it.
+    </p>
+  </div>
+  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+    <Brain className="w-8 h-8 text-violet-400 mb-4" />
+    <h3 className="text-lg font-semibold mb-2">It remembers what you do not know.</h3>
+    <p className="text-zinc-400 text-sm leading-relaxed">
+      Every topic you struggle with gets tracked. Retrace brings it back in future sessions -
+      spaced out over days - until you can answer it cold. Like a tutor that never forgets your weak spots.
+    </p>
+  </div>
+  <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+    <Shield className="w-8 h-8 text-violet-400 mb-4" />
+    <h3 className="text-lg font-semibold mb-2">No hints. No hand-holding.</h3>
+    <p className="text-zinc-400 text-sm leading-relaxed">
+      The discomfort is the point. Real interviews do not give you hints either.
+      Retrace forces active recall - the only kind of practice that actually builds understanding.
+    </p>
+  </div>
+</div>
 
       {/* How it works */}
       <section className="px-8 py-24 border-t border-zinc-800">
@@ -108,22 +109,22 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-center mb-4">How it works</h2>
           <p className="text-zinc-400 text-center mb-12">Three steps. No setup. No accounts required to try.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">1</div>
-              <h3 className="font-semibold mb-2">Paste your repo</h3>
-              <p className="text-zinc-400 text-sm">Drop in any public GitHub repository URL. Works best on projects you've personally written or contributed to.</p>
-            </div>  
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">2</div>
-              <h3 className="font-semibold mb-2">Get interrogated</h3>
-              <p className="text-zinc-400 text-sm">The AI reads your code and asks specific, pointed questions about decisions you actually made.</p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">3</div>
-              <h3 className="font-semibold mb-2">See your blind spots</h3>
-              <p className="text-zinc-400 text-sm">Get an honest score and a weakness map showing exactly what you can't yet explain confidently.</p>
-            </div>
-          </div>
+  <div className="text-center">
+    <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">1</div>
+    <h3 className="font-semibold mb-2">Paste your repo</h3>
+    <p className="text-zinc-400 text-sm">Drop in any public GitHub URL. Works best on projects you personally wrote or contributed to.</p>
+  </div>
+  <div className="text-center">
+    <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">2</div>
+    <h3 className="font-semibold mb-2">Get interrogated</h3>
+    <p className="text-zinc-400 text-sm">Retrace asks the questions a real interviewer would - about your architecture, your decisions, your trade-offs. No generic questions. No easy ones.</p>
+  </div>
+  <div className="text-center">
+    <div className="w-12 h-12 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center mx-auto mb-4 text-violet-400 font-bold">3</div>
+    <h3 className="font-semibold mb-2">See exactly where you would fail</h3>
+    <p className="text-zinc-400 text-sm">Get an honest score and a Weakness Map showing the specific concepts you can not yet explain confidently. Come back tomorrow - Retrace will test you on them again.</p>
+  </div>
+</div>
         </div>
       </section>
 
