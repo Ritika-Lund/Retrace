@@ -18,6 +18,8 @@ export default function Dashboard() {
   const [feedbackText, setFeedbackText] = useState('')
   const [feedbackSent, setFeedbackSent] = useState(false)
   const [totalSessions, setTotalSessions] = useState(0)
+  const [averageScore, setAverageScore] = useState(0)
+  const [totalRepos, setTotalRepos] = useState(0)
 
   const SESSIONS_PER_PAGE = 5
 
@@ -45,6 +47,20 @@ export default function Dashboard() {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .range(from, to)
+    const { data: allSessions } = await supabase
+  .from('sessions')
+  .select('percentage')
+  .eq('user_id', userId)
+if (allSessions && allSessions.length > 0) {
+  const avg = Math.round(allSessions.reduce((acc, s) => acc + s.percentage, 0) / allSessions.length)
+  setAverageScore(avg)
+}
+
+const { data: allRepos } = await supabase
+  .from('sessions')
+  .select('repo_url')
+  .eq('user_id', userId)
+if (allRepos) setTotalRepos(new Set(allRepos.map(s => s.repo_url)).size)
     if (!error) {
       if (page === 0) {
         setSessions(data || [])
@@ -117,9 +133,6 @@ export default function Dashboard() {
     }
   }
 
-  const averageScore = sessions.length > 0
-    ? Math.round(sessions.reduce((acc, s) => acc + s.percentage, 0) / sessions.length)
-    : 0
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -166,9 +179,7 @@ export default function Dashboard() {
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
             <Code className="w-6 h-6 text-violet-400 mb-3" />
-            <div className="text-3xl font-bold mb-1">
-              {new Set(sessions.map(s => s.repo_url)).size}
-            </div>
+            <div className="text-3xl font-bold mb-1">{totalRepos}</div>
             <div className="text-zinc-400 text-sm">Repos reviewed</div>
           </div>
         </div>

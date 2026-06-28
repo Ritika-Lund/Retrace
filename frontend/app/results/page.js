@@ -24,7 +24,13 @@ export default function ResultsPage() {
     setFeedbackList(f)
     setLoaded(true)
 
+    if (!r) {
+  router.push('/dashboard')
+  return
+}
+
     const saveSession = async () => {
+      
       if (hasSaved.current) return
       hasSaved.current = true
 
