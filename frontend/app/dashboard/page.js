@@ -11,8 +11,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [repoUrl, setRepoUrl] = useState('')
   const [weaknesses, setWeaknesses] = useState([])
-  const [interviewDate, setInterviewDate] = useState('')
-  const [savedDate, setSavedDate] = useState(null)
   const [dueReviews, setDueReviews] = useState([])
   const [sessionPage, setSessionPage] = useState(0)
   const [hasMoreSessions, setHasMoreSessions] = useState(true)
@@ -34,7 +32,6 @@ export default function Dashboard() {
       fetchSessions(user.id)
       fetchWeaknesses(user.id)
       fetchDueReviews(user.id)
-      fetchSettings(user.id)
     }
     getUser()
   }, [])
@@ -56,11 +53,13 @@ export default function Dashboard() {
       }
       setHasMoreSessions((data || []).length === SESSIONS_PER_PAGE)
     }
+
     const { count } = await supabase
       .from('sessions')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
     if (count !== null) setTotalSessions(count)
+
     setLoading(false)
   }
 
@@ -85,45 +84,6 @@ export default function Dashboard() {
     if (!error) setDueReviews(data || [])
   }
 
-  const fetchSettings = async (userId) => {
-    const { data, error } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
-    if (data) {
-      setSavedDate(data.interview_date)
-      setInterviewDate(data.interview_date || '')
-    }
-  }
-
-  const saveInterviewDate = async () => {
-    if (!user || !interviewDate) return
-    const { data: existing } = await supabase
-      .from('user_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (existing) {
-      await supabase
-        .from('user_settings')
-        .update({ interview_date: interviewDate })
-        .eq('user_id', user.id)
-    } else {
-      await supabase
-        .from('user_settings')
-        .insert({ user_id: user.id, interview_date: interviewDate })
-    }
-    setSavedDate(interviewDate)
-  }
-
-  const getDaysLeft = () => {
-    if (!savedDate) return null
-    const diff = new Date(savedDate) - new Date()
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
-  }
-
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/')
@@ -144,12 +104,12 @@ export default function Dashboard() {
   }
 
   const deleteSession = async (sessionId) => {
-  const confirmed = window.confirm('Delete this session? This cannot be undone.')
-  if (!confirmed) return
-  await supabase.from('sessions').delete().eq('id', sessionId)
-  setSessions(prev => prev.filter(s => s.id !== sessionId))
-  setTotalSessions(prev => prev - 1)
-}
+    const confirmed = window.confirm('Delete this session? This cannot be undone.')
+    if (!confirmed) return
+    await supabase.from('sessions').delete().eq('id', sessionId)
+    setSessions(prev => prev.filter(s => s.id !== sessionId))
+    setTotalSessions(prev => prev - 1)
+  }
 
   const handleStart = () => {
     if (repoUrl.trim()) {
@@ -222,49 +182,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        <div className="bg-gradient-to-br from-violet-600/20 to-zinc-900 border border-violet-500/30 rounded-xl p-6 mb-10">
-          <h2 className="text-lg font-semibold mb-4">📅 Interview Countdown</h2>
-          {savedDate ? (
-            <div>
-              <div className="flex items-center gap-4 mb-4">
-                <div className="text-5xl font-bold text-violet-400">{getDaysLeft()}</div>
-                <div>
-                  <p className="text-zinc-300">days left until your interview</p>
-                  <p className="text-zinc-500 text-sm">{new Date(savedDate).toLocaleDateString()}</p>
-                </div>
-              </div>
-              {weaknesses.length > 0 && (
-                <div className="bg-black/30 rounded-lg p-4">
-                  <p className="text-zinc-400 text-sm mb-2">🎯 Today's focus area:</p>
-                  <p className="text-zinc-200 text-sm">{weaknesses[0]?.topic}</p>
-                  <p className="text-zinc-600 text-xs mt-1">{weaknesses[0]?.repo_url?.replace('https://github.com/', '')}</p>
-                </div>
-              )}
-              <button
-                onClick={() => setSavedDate(null)}
-                className="text-zinc-500 hover:text-zinc-300 text-xs mt-3"
-              >
-                Change date
-              </button>
-            </div>
-          ) : (
-            <div className="flex gap-3">
-              <input
-                type="date"
-                value={interviewDate}
-                onChange={(e) => setInterviewDate(e.target.value)}
-                className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-violet-500"
-              />
-              <button
-                onClick={saveInterviewDate}
-                className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-6 py-3 font-semibold"
-              >
-                Set Date
-              </button>
-            </div>
-          )}
-        </div>
-
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-10">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Plus className="w-5 h-5 text-violet-400" />
@@ -329,39 +246,39 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {sessions.map((session) => (
-      <div
-  key={session.id}
-  onClick={() => router.push(`/session-review?id=${session.id}`)}
-  className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-center justify-between cursor-pointer hover:border-zinc-600 transition-colors"
->
-        <div>
-          <p className="font-medium mb-1">
-            {session.repo_url.replace('https://github.com/', '')}
-          </p>
-          <p className="text-zinc-500 text-sm">
-            {new Date(session.created_at).toLocaleDateString()} · {session.company_mode} · {session.total} questions
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className={`text-2xl font-bold ${
-            session.percentage >= 70 ? 'text-green-400' :
-            session.percentage >= 40 ? 'text-yellow-400' : 'text-red-400'
-          }`}>
-            {session.percentage}%
-          </div>
-                <button
-        onClick={(e) => {
-          e.stopPropagation()
-          deleteSession(session.id)
-        }}
-        className="text-zinc-600 hover:text-red-400 transition-colors text-sm px-2"
-        title="Delete session"
-      >
-        ✕
-      </button>
-        </div>
-      </div>
-    ))}
+                <div
+                  key={session.id}
+                  onClick={() => router.push(`/session-review?id=${session.id}`)}
+                  className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex items-center justify-between cursor-pointer hover:border-zinc-600 transition-colors"
+                >
+                  <div>
+                    <p className="font-medium mb-1">
+                      {session.repo_url.replace('https://github.com/', '')}
+                    </p>
+                    <p className="text-zinc-500 text-sm">
+                      {new Date(session.created_at).toLocaleDateString()} · {session.total} questions
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className={`text-2xl font-bold ${
+                      session.percentage >= 70 ? 'text-green-400' :
+                      session.percentage >= 40 ? 'text-yellow-400' : 'text-red-400'
+                    }`}>
+                      {session.percentage}%
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteSession(session.id)
+                      }}
+                      className="text-zinc-600 hover:text-red-400 transition-colors text-sm px-2"
+                      title="Delete session"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
               {hasMoreSessions && (
                 <button
                   onClick={() => {
