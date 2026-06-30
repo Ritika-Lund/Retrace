@@ -196,11 +196,16 @@ export default function SessionPage() {
       <div className="flex-1 overflow-y-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-6">
           {starting ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
-              <p className="text-zinc-400">Analyzing your repository...</p>
-              <p className="text-zinc-600 text-sm">This may take up to 30 seconds</p>
-            </div>
+  <div className="flex flex-col items-center justify-center py-24 gap-4 max-w-md mx-auto text-center">
+    <Loader2 className="w-8 h-8 text-violet-400 animate-spin" />
+    <p className="text-zinc-300 font-semibold">Analyzing your repository...</p>
+    <p className="text-zinc-500 text-sm leading-relaxed">
+      Retrace is reading your code, commits, and architecture. 
+      When it is ready, it will interview you the way a real engineer would — 
+      no hints, no hand-holding, no generic questions.
+    </p>
+    <p className="text-zinc-600 text-xs">This may take up to 30 seconds</p>
+  </div>
           ) : (
             messages.map((msg, i) => (
               <div key={i} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>

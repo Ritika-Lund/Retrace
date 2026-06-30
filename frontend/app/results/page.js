@@ -66,10 +66,11 @@ export default function ResultsPage() {
   }
 
   const getScoreMessage = () => {
-    if (percentage >= 70) return "Strong performance! You know your codebase well."
-    if (percentage >= 40) return "Room to grow. Some gaps in your understanding."
-    return "You've been relying on AI too much. Time to dig deeper."
-  }
+  if (percentage >= 85) return "You clearly understand this codebase. This is interview-ready."
+  if (percentage >= 70) return "Solid understanding, with a few gaps a real interviewer would catch."
+  if (percentage >= 40) return "You can explain the surface, but not the reasoning underneath."
+  return "You've shipped this code without truly understanding it. Time to dig deeper."
+}
 
   const getScoreEmoji = () => {
     if (percentage >= 70) return '🔥'
@@ -126,6 +127,26 @@ export default function ResultsPage() {
             <div className="text-2xl mb-2">{getScoreEmoji()}</div>
             <p className="text-zinc-400 text-lg">{getScoreMessage()}</p>
           </div>
+
+              {feedbackList.filter(item => (item.score ?? (item.confident ? 3 : 0)) < 2).length > 0 && (
+      <div className="bg-zinc-900 border border-red-500/20 rounded-xl p-5 mb-8">
+        <p className="text-zinc-400 text-sm mb-3">
+          Based on this session, here is what would likely come up again in a real interview:
+        </p>
+            <ul className="space-y-1.5">
+      {[...new Set(
+        feedbackList
+          .filter(item => (item.score ?? (item.confident ? 3 : 0)) < 2)
+          .map(item => item.topic || 'A topic from this session')
+      )].map((topic, i) => (
+        <li key={i} className="text-zinc-300 text-sm flex items-start gap-2">
+          <span className="text-red-400 mt-0.5">•</span>
+          {topic}
+        </li>
+      ))}
+    </ul>
+      </div>
+    )}
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-4 mb-8">
