@@ -1,13 +1,12 @@
-FROM --platform=linux/amd64 python:3.12-slim
+FROM python:3.12-slim
 
-RUN apt-get update && apt-get install -y git gcc && apt-get clean
+RUN apt-get update && apt-get install -y git gcc libffi-dev && apt-get clean
 
 WORKDIR /app
 
-RUN git --version
-
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir supabase==2.31.0 --no-deps && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
