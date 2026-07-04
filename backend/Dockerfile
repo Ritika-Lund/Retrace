@@ -1,11 +1,13 @@
-FROM python:3.12-slim
+FROM --platform=linux/amd64 python:3.12-slim
 
-RUN apt-get update && apt-get install -y git gcc && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y git gcc && apt-get clean
 
 WORKDIR /app
 
+RUN git --version
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt --ignore-requires-python
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
