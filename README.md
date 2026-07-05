@@ -112,16 +112,6 @@ without scrambling to remember what you were thinking when you wrote it.
                               └─────────────────┘
 ```
 
-**Key architectural decisions:**
-
-**Session save logic lives in the backend, not the frontend.** Originally weakness tracking ran client-side via Supabase anon key + RLS. Moved to a `/interview/save-session` FastAPI endpoint using the service role key because RLS alone couldn't prevent crafted fake evaluation payloads. The backend verifies the Supabase auth token before every write — `user_id` is always the authenticated caller, never whatever the client claims.
-
-**Topic matching uses `topic_index` instead of fuzzy string matching.** AI-generated topic labels are inconsistent across calls ("Modular code structure" vs "Modular code organization"). `difflib` string similarity failed on conceptually identical but textually different labels. The fix: pass the user's existing unresolved topics as a numbered list to the evaluator, and have the AI return a `topic_index` pointing to the match. Reliable, no external dependencies.
-
-**Spaced repetition math is a standalone pure module.** `weakness_logic.py` contains only `compute_advance()`, `compute_reset()`, and `compute_new_weakness()` — no Supabase calls, no network. Independently testable with 10 unit tests covering every code path.
-
-**Repo cloning uses subprocess with process tree kill on Windows.** GitPython had no timeout support. Moved to `subprocess.Popen` with `communicate(timeout=30)` and `taskkill /F /T /PID` on Windows to kill the entire git process tree on timeout. Uses `--depth=1 --filter=blob:none` for fast blobless clones.
-
 ---
 
 ## Project Structure
@@ -321,4 +311,4 @@ MIT — free to use, fork, and build on.
 
 - LinkedIn: https://www.linkedin.com/in/ritika-lund
 - GitHub: https://github.com/ritika-lund
-*
+
