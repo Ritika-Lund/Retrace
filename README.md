@@ -44,8 +44,6 @@ Demo link:https://drive.google.com/file/d/161CJtCx3By-XMdHLOTrBBtRD5pRWCylf/view
 
 ---
 
-🔗 **Frontend preview:** [retrace-bay.vercel.app](https://retrace-bay.vercel.app)
-
 ⚠️ The backend is currently running on a temporary deployment while production hosting is being finalized.
 
 ---
