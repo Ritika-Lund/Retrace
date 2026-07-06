@@ -293,12 +293,6 @@ Works with **public repositories only**.
 - Public repositories only (private repositories are not yet supported).
 - Very large repositories may exceed the current processing limits.
 
-## Roadmap
-
-- Support private repositories
-- Multi-language interviews
-- Voice interviews
-
 ---
 
 ## License
@@ -307,7 +301,7 @@ MIT — free to use, fork, and build on.
 
 ---
 
-# Author
+## Author
 
 **Ritika Lund**
 
