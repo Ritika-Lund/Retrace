@@ -127,11 +127,34 @@ if (allRepos) setTotalRepos(new Set(allRepos.map(s => s.repo_url)).size)
     setTotalSessions(prev => prev - 1)
   }
 
-  const handleStart = () => {
-    if (repoUrl.trim()) {
-      router.push(`/session?repo=${encodeURIComponent(repoUrl)}`)
-    }
+  const normalizeRepoUrl = (input) => {
+  const trimmed = input.trim()
+  
+  // Already a full URL
+  if (trimmed.startsWith('https://github.com/')) {
+    return trimmed
   }
+  
+  // Markdown link format: [text](url)
+  const markdownMatch = trimmed.match(/\[.*?\]\((https?:\/\/[^)]+)\)/)
+  if (markdownMatch) {
+    return markdownMatch[1]
+  }
+  
+  // Short format: username/repo
+  if (trimmed.match(/^[\w.-]+\/[\w.-]+$/)) {
+    return `https://github.com/${trimmed}`
+  }
+  
+  return trimmed
+}
+
+const handleStart = () => {
+  if (repoUrl.trim()) {
+    const normalized = normalizeRepoUrl(repoUrl)
+    router.push(`/session?repo=${encodeURIComponent(normalized)}`)
+  }
+}
 
 
   return (

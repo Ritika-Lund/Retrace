@@ -23,3 +23,4 @@ app.include_router(interview.router)
 @app.get("/")
 def root():
     return {"message": "Retrace API is running"}
+    
