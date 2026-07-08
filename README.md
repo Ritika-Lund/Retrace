@@ -42,11 +42,6 @@ without scrambling to remember what you were thinking when you wrote it.
 
 Demo link:https://drive.google.com/file/d/161CJtCx3By-XMdHLOTrBBtRD5pRWCylf/view?usp=sharing
 
----
-
-⚠️ The backend is currently running on a temporary deployment while production hosting is being finalized.
-
----
 
 ## Features
 
