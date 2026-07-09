@@ -39,7 +39,7 @@ export default function ResultsPage() {
       const accessToken = session.access_token
 
       try {
-        await fetch('http://localhost:8000/interview/save-session', {
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/interview/save-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
