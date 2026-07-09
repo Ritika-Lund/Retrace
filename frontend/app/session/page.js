@@ -21,7 +21,7 @@ export default function SessionPage() {
   const startInterview = async (topics=[]) => {
     setStarting(true)
     try {
-      const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/interview/start', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/interview/start`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -72,7 +72,7 @@ export default function SessionPage() {
     setUserInput('')
     setLoading(true)
     try {
-      const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/interview/continue', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/interview/continue`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -108,7 +108,7 @@ export default function SessionPage() {
   }
     for (let i = 0; i < userMessages.length; i++) {
       try {
-        const res = await fetch('${process.env.NEXT_PUBLIC_API_URL}/interview/evaluate', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/interview/evaluate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
