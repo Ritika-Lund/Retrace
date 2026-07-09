@@ -7,7 +7,16 @@ import { supabase } from '@/lib/supabase'
 export default function SessionPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const repoUrl = searchParams.get('repo')
+  const rawRepoUrl = searchParams.get('repo')
+const repoUrl = (() => {
+  if (!rawRepoUrl) return rawRepoUrl
+  const trimmed = rawRepoUrl.trim()
+  if (trimmed.startsWith('https://github.com/')) return trimmed
+  const markdownMatch = trimmed.match(/\[.*?\]\((https?:\/\/[^)]+)\)/)
+  if (markdownMatch) return markdownMatch[1]
+  if (trimmed.match(/^[\w.-]+\/[\w.-]+$/)) return `https://github.com/${trimmed}`
+  return trimmed
+})()
   const bottomRef = useRef(null)
 
   const [messages, setMessages] = useState([])
