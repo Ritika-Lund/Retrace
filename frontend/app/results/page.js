@@ -66,10 +66,10 @@ export default function ResultsPage() {
   }
 
   const getScoreMessage = () => {
-  if (percentage >= 85) return "You clearly understand this codebase. This is interview-ready."
-  if (percentage >= 70) return "Solid understanding, with a few gaps a real interviewer would catch."
-  if (percentage >= 40) return "You can explain the surface, but not the reasoning underneath."
-  return "You've shipped this code without truly understanding it. Time to dig deeper."
+  if (percentage >= 85) return "You actually know what you built. This is not as common as it should be."
+  if (percentage >= 70) return "You'd pass the interview. Your palms would sweat, but you'd pass."
+  if (percentage >= 40) return "The code works. Your understanding of it is still loading."
+  return "You and your code are strangers who happen to live in the same repository."
 }
 
   const getScoreEmoji = () => {

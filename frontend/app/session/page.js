@@ -29,6 +29,29 @@ const repoUrl = (() => {
 
   const startInterview = async (topics=[]) => {
     setStarting(true)
+    // Check if repo is public before attempting to clone
+  try {
+    const repoPath = repoUrl.replace('https://github.com/', '').replace('.git', '')
+    const checkRes = await fetch(`https://api.github.com/repos/${repoPath}`)
+    if (checkRes.status === 404) {
+      setMessages([{ role: 'assistant', content: 'Repository not found. Please check the URL and make sure it exists.' }])
+      setStarting(false)
+      return
+    }
+    if (checkRes.status === 403 || checkRes.status === 401) {
+      setMessages([{ role: 'assistant', content: 'This appears to be a private repository. Retrace only works with public repositories.' }])
+      setStarting(false)
+      return
+    }
+    const repoData = await checkRes.json()
+    if (repoData.private) {
+      setMessages([{ role: 'assistant', content: 'This is a private repository. Retrace only works with public repositories. Make it public on GitHub and try again.' }])
+      setStarting(false)
+      return
+    }
+  } catch (err) {
+    // If GitHub API check fails, proceed anyway and let the backend handle it
+  }
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/interview/start`, {
         method: 'POST',
