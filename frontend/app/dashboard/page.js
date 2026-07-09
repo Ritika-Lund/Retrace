@@ -152,7 +152,6 @@ if (allRepos) setTotalRepos(new Set(allRepos.map(s => s.repo_url)).size)
 const handleStart = () => {
   if (repoUrl.trim()) {
     const normalized = normalizeRepoUrl(repoUrl)
-    console.log('Original:', repoUrl, 'Normalized:', normalized)
     router.push(`/session?repo=${encodeURIComponent(normalized)}`)
   }
 }
