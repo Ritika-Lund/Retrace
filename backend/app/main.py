@@ -12,7 +12,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://retrace-bay.vercel.app",
+        "https://retrace-2fubis3j0-ritika-projects-vercel.app",
+        "http://localhost:3000"
+    ],
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
