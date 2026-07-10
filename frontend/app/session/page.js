@@ -34,7 +34,7 @@ const repoUrl = (() => {
     const repoPath = repoUrl.replace('https://github.com/', '').replace('.git', '')
     const checkRes = await fetch(`https://api.github.com/repos/${repoPath}`)
     if (checkRes.status === 404) {
-      setMessages([{ role: 'assistant', content: 'Repository not found. Please check the URL and make sure it exists.' }])
+      setMessages([{ role: 'assistant', content: 'Repository not found. It may not exist, or it may be private. Retrace only works with public repositories.' }])
       setStarting(false)
       return
     }
