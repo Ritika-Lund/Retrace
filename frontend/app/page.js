@@ -3,15 +3,22 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Brain, Target, Zap, Shield } from 'lucide-react'
 
+
+
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState('')
+  const [inputError, setInputError] = useState('')
+
   const router = useRouter()
 
   const handleStart = () => {
-    if (repoUrl.trim()) {
-      router.push(`/session?repo=${encodeURIComponent(repoUrl)}`)
-    }
+  if (!repoUrl.trim()) {
+    setInputError('Please enter a GitHub repository URL')
+    return
   }
+  setInputError('')
+  router.push(`/session?repo=${encodeURIComponent(repoUrl)}`)
+}
 
   return (
     <main className="min-h-screen bg-black text-white">
@@ -33,6 +40,7 @@ export default function Home() {
     Sign in
   </button>
 </div>
+   
         </div>
       </nav>
 
@@ -60,7 +68,10 @@ export default function Home() {
             type="text"
             placeholder="https://github.com/username/repo"
             value={repoUrl}
-            onChange={(e) => setRepoUrl(e.target.value)}
+            onChange={(e) =>{ setRepoUrl(e.target.value)
+              if (inputError) setInputError('')
+    }}
+
             onKeyDown={(e) => e.key === 'Enter' && handleStart()}
             className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 transition-colors"
           />
@@ -72,6 +83,9 @@ export default function Home() {
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
+        {inputError && (
+      <p className="text-red-400 text-sm mb-4">{inputError}</p>
+        )}
         <p className="text-zinc-600 text-sm">Free. No account required to try.</p>
       </section>
 
