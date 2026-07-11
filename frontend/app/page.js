@@ -1,15 +1,26 @@
 'use client'
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, Brain, Target, Zap, Shield } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
 
 
 
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState('')
   const [inputError, setInputError] = useState('')
+ 
 
   const router = useRouter()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setIsLoggedIn(!!user)
+    }
+    checkAuth()
+  }, [])
 
   const handleStart = () => {
   if (!repoUrl.trim()) {
@@ -33,12 +44,21 @@ export default function Home() {
   <a href="https://github.com" className="text-zinc-400 hover:text-white transition-colors text-sm">
     GitHub
   </a>
-  <button
-    onClick={() => router.push('/login')}
-    className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-4 py-2 text-sm font-semibold"
-  >
-    Sign in
-  </button>
+      {isLoggedIn ? (
+      <button
+        onClick={() => router.push('/dashboard')}
+        className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-4 py-2 text-sm font-semibold"
+      >
+        Dashboard
+      </button>
+    ) : (
+      <button
+        onClick={() => router.push('/login')}
+        className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-4 py-2 text-sm font-semibold"
+      >
+        Sign in
+      </button>
+)}
 </div>
    
         </div>

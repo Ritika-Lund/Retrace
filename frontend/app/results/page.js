@@ -12,6 +12,17 @@ export default function ResultsPage() {
   const [feedbackList, setFeedbackList] = useState([])
   const [loaded, setLoaded] = useState(false)
   const hasSaved = useRef(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false)
+  const [navigating, setNavigating] = useState(false)
+
+    useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setIsLoggedIn(!!user)
+    }
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     const s = parseInt(sessionStorage.getItem('retrace_score') || '0')
@@ -212,19 +223,27 @@ export default function ResultsPage() {
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => router.push(`/session?repo=${encodeURIComponent(repoUrl)}`)}
-              className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 transition-colors rounded-xl px-6 py-3 font-semibold"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Try Again
-            </button>
                 <button
-          onClick={() => router.push('/dashboard')}
-          className="flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition-colors rounded-xl px-6 py-3 font-semibold"
-        >
-          Go to Dashboard
-           </button>
+                  onClick={() => router.push(`/session?repo=${encodeURIComponent(repoUrl)}`)}
+                  className="flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 transition-colors rounded-xl px-6 py-3 font-semibold"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Try Again
+                </button>
+                    <button
+            onClick={() => {
+              if (isLoggedIn) {
+                setNavigating(true)
+                router.push('/dashboard')
+              } else {
+                setShowAuthPrompt(true)
+              }
+            }}
+            disabled={navigating}
+      className="flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition-colors rounded-xl px-6 py-3 font-semibold disabled:opacity-50"
+    >
+      {navigating ? 'Loading...' : 'Go to Dashboard'}
+    </button>
             <button
               onClick={() => router.push('/')}
               className="flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition-colors rounded-xl px-6 py-3 font-semibold"
@@ -234,6 +253,30 @@ export default function ResultsPage() {
           </div>
         </div>
       </div>
+      {showAuthPrompt && (
+  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+    <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-md w-full text-center">
+      <h3 className="text-lg font-semibold mb-2">Sign in to save your progress</h3>
+      <p className="text-zinc-400 text-sm mb-6">
+        Create a free account to track your weakness map, session history, and spaced repetition progress across sessions.
+      </p>
+      <div className="flex gap-3 justify-center">
+        <button
+          onClick={() => router.push('/login')}
+          className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-5 py-2.5 font-semibold text-sm"
+        >
+          Sign in
+        </button>
+        <button
+          onClick={() => setShowAuthPrompt(false)}
+          className="bg-zinc-800 hover:bg-zinc-700 transition-colors rounded-lg px-5 py-2.5 text-zinc-400 text-sm"
+        >
+          Stay signed out
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   )
 }
