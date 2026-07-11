@@ -219,6 +219,12 @@ export default function ResultsPage() {
               <RotateCcw className="w-4 h-4" />
               Try Again
             </button>
+                <button
+          onClick={() => router.push('/dashboard')}
+          className="flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition-colors rounded-xl px-6 py-3 font-semibold"
+        >
+          Go to Dashboard
+           </button>
             <button
               onClick={() => router.push('/')}
               className="flex items-center justify-center gap-2 bg-zinc-900 border border-zinc-700 hover:border-zinc-500 transition-colors rounded-xl px-6 py-3 font-semibold"
