@@ -2,7 +2,7 @@ import "./globals.css";
 
 
 export const metadata = {
-  title: "Retrace — Defend your code",
+  title: "Retrace — You built it. Can you explain it?",
   description: "AI-powered technical interview simulator based on your own codebase",
   icons:{
     icon:'/favicon.svg',
