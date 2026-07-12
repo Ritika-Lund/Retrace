@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata = {
   title: "Retrace — Defend your code",
   description: "AI-powered technical interview simulator based on your own codebase",
+  icons:{
+    icon:'/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }) {
