@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Brain, Plus, LogOut, TrendingUp, Clock, Code } from 'lucide-react'
+import { Brain, Plus, LogOut, TrendingUp, Clock, Code, ChevronDown, Eye, EyeOff } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export default function Dashboard() {
@@ -20,6 +20,13 @@ export default function Dashboard() {
   const [totalSessions, setTotalSessions] = useState(0)
   const [averageScore, setAverageScore] = useState(0)
   const [totalRepos, setTotalRepos] = useState(0)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
 
   const SESSIONS_PER_PAGE = 5
 
@@ -38,6 +45,14 @@ export default function Dashboard() {
     getUser()
   }, [])
 
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showUserMenu) setShowUserMenu(false)
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [showUserMenu])
+
   const fetchSessions = async (userId, page = 0) => {
     const from = page * SESSIONS_PER_PAGE
     const to = from + SESSIONS_PER_PAGE - 1
@@ -47,20 +62,22 @@ export default function Dashboard() {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .range(from, to)
-    const { data: allSessions } = await supabase
-  .from('sessions')
-  .select('percentage')
-  .eq('user_id', userId)
-if (allSessions && allSessions.length > 0) {
-  const avg = Math.round(allSessions.reduce((acc, s) => acc + s.percentage, 0) / allSessions.length)
-  setAverageScore(avg)
-}
 
-const { data: allRepos } = await supabase
-  .from('sessions')
-  .select('repo_url')
-  .eq('user_id', userId)
-if (allRepos) setTotalRepos(new Set(allRepos.map(s => s.repo_url)).size)
+    const { data: allSessions } = await supabase
+      .from('sessions')
+      .select('percentage')
+      .eq('user_id', userId)
+    if (allSessions && allSessions.length > 0) {
+      const avg = Math.round(allSessions.reduce((acc, s) => acc + s.percentage, 0) / allSessions.length)
+      setAverageScore(avg)
+    }
+
+    const { data: allRepos } = await supabase
+      .from('sessions')
+      .select('repo_url')
+      .eq('user_id', userId)
+    if (allRepos) setTotalRepos(new Set(allRepos.map(s => s.repo_url)).size)
+
     if (!error) {
       if (page === 0) {
         setSessions(data || [])
@@ -127,35 +144,45 @@ if (allRepos) setTotalRepos(new Set(allRepos.map(s => s.repo_url)).size)
     setTotalSessions(prev => prev - 1)
   }
 
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match')
+      return
+    }
+    setPasswordError('')
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) {
+      setPasswordError(error.message)
+      return
+    }
+    setPasswordSuccess(true)
+    setTimeout(() => {
+      setShowChangePassword(false)
+      setPasswordSuccess(false)
+      setNewPassword('')
+      setConfirmPassword('')
+    }, 1500)
+  }
+
   const normalizeRepoUrl = (input) => {
-  const trimmed = input.trim()
-  
-  // Already a full URL
-  if (trimmed.startsWith('https://github.com/')) {
+    const trimmed = input.trim()
+    if (trimmed.startsWith('https://github.com/')) return trimmed
+    const markdownMatch = trimmed.match(/\[.*?\]\((https?:\/\/[^)]+)\)/)
+    if (markdownMatch) return markdownMatch[1]
+    if (trimmed.match(/^[\w.-]+\/[\w.-]+$/)) return `https://github.com/${trimmed}`
     return trimmed
   }
-  
-  // Markdown link format: [text](url)
-  const markdownMatch = trimmed.match(/\[.*?\]\((https?:\/\/[^)]+)\)/)
-  if (markdownMatch) {
-    return markdownMatch[1]
-  }
-  
-  // Short format: username/repo
-  if (trimmed.match(/^[\w.-]+\/[\w.-]+$/)) {
-    return `https://github.com/${trimmed}`
-  }
-  
-  return trimmed
-}
 
-const handleStart = () => {
-  if (repoUrl.trim()) {
-    const normalized = normalizeRepoUrl(repoUrl)
-    router.push(`/session?repo=${encodeURIComponent(normalized)}`)
+  const handleStart = () => {
+    if (repoUrl.trim()) {
+      const normalized = normalizeRepoUrl(repoUrl)
+      router.push(`/session?repo=${encodeURIComponent(normalized)}`)
+    }
   }
-}
-
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -171,14 +198,33 @@ const handleStart = () => {
           >
             Feedback
           </button>
-          <span className="text-zinc-400 text-sm">{user?.email}</span>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-sm"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign out
-          </button>
+          <div className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu) }}
+              className="text-zinc-400 hover:text-white transition-colors text-sm flex items-center gap-1"
+            >
+              {user?.email}
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            {showUserMenu && (
+              <div className="absolute right-0 top-8 bg-zinc-900 border border-zinc-700 rounded-xl py-1 w-48 z-50 shadow-xl">
+                <button
+                  onClick={() => { setShowChangePassword(true); setShowUserMenu(false) }}
+                  className="w-full text-left px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors"
+                >
+                  Change password
+                </button>
+                <div className="border-t border-zinc-800 my-1" />
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-2.5 text-sm text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors flex items-center gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -358,6 +404,67 @@ const handleStart = () => {
                     className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-4 py-2 text-sm font-semibold"
                   >
                     Submit
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {showChangePassword && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Change password</h3>
+            {passwordSuccess ? (
+              <p className="text-green-400 text-sm">Password updated successfully.</p>
+            ) : (
+              <>
+                {passwordError && (
+                  <p className="text-red-400 text-sm mb-3">{passwordError}</p>
+                )}
+                <div className="mb-3 relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    placeholder="New password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-2.5 text-zinc-500 hover:text-zinc-300"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <div className="mb-4">
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
+                  />
+                </div>
+                <div className="flex gap-3 justify-end">
+                  <button
+                    onClick={() => {
+                      setShowChangePassword(false)
+                      setPasswordError('')
+                      setNewPassword('')
+                      setConfirmPassword('')
+                    }}
+                    className="text-zinc-400 hover:text-white text-sm px-4 py-2"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleChangePassword}
+                    className="bg-violet-600 hover:bg-violet-500 transition-colors rounded-lg px-4 py-2 text-sm font-semibold"
+                  >
+                    Update password
                   </button>
                 </div>
               </>
