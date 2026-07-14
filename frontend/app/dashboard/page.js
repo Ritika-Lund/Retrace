@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
 
   const SESSIONS_PER_PAGE = 5
 
@@ -144,30 +145,45 @@ export default function Dashboard() {
     setTotalSessions(prev => prev - 1)
   }
 
-  const handleChangePassword = async () => {
-    if (newPassword.length < 6) {
-      setPasswordError('Password must be at least 6 characters')
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError('Passwords do not match')
-      return
-    }
-    setPasswordError('')
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-    if (error) {
-      setPasswordError(error.message)
-      return
-    }
-    setPasswordSuccess(true)
-    setTimeout(() => {
-      setShowChangePassword(false)
-      setPasswordSuccess(false)
-      setNewPassword('')
-      setConfirmPassword('')
-    }, 1500)
+ const handleChangePassword = async () => {
+  if (!currentPassword) {
+    setPasswordError('Please enter your current password')
+    return
+  }
+  if (newPassword.length < 6) {
+    setPasswordError('New password must be at least 6 characters')
+    return
+  }
+  if (newPassword !== confirmPassword) {
+    setPasswordError('Passwords do not match')
+    return
+  }
+  setPasswordError('')
+
+  // Verify current password first
+  const { error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: currentPassword
+  })
+  if (signInError) {
+    setPasswordError('Current password is incorrect')
+    return
   }
 
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) {
+    setPasswordError(error.message)
+    return
+  }
+  setPasswordSuccess(true)
+  setTimeout(() => {
+    setShowChangePassword(false)
+    setPasswordSuccess(false)
+    setNewPassword('')
+    setConfirmPassword('')
+    setCurrentPassword('')
+  }, 1500)
+}
   const normalizeRepoUrl = (input) => {
     const trimmed = input.trim()
     if (trimmed.startsWith('https://github.com/')) return trimmed
@@ -425,6 +441,15 @@ export default function Dashboard() {
                 )}
                 <div className="mb-3 relative">
                   <input
+                    type="password"
+                    placeholder="Current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500"
+                  />
+                </div>
+                <div className="mb-3 relative">
+                  <input
                     type={showNewPassword ? 'text' : 'password'}
                     placeholder="New password"
                     value={newPassword}
@@ -455,6 +480,7 @@ export default function Dashboard() {
                       setPasswordError('')
                       setNewPassword('')
                       setConfirmPassword('')
+                      setCurrentPassword('')
                     }}
                     className="text-zinc-400 hover:text-white text-sm px-4 py-2"
                   >
