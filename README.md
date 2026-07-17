@@ -44,7 +44,7 @@ without scrambling to remember what you were thinking when you wrote it.
 
 🔗 **Try it:** [retrace-bay.vercel.app](https://retrace-bay.vercel.app)
 
-🎥 **Demo:** [Watch here](https://drive.google.com/file/d/161CJtCx3By-XMdHLOTrBBtRD5pRWCylf/view?usp=sharing)
+🎥 **Demo:** [Watch here](https://drive.google.com/file/d/1HyepOtebrQgOBf3I2UiEIV4YZ7O_haKY/view?usp=sharing)
 
 ---
 
